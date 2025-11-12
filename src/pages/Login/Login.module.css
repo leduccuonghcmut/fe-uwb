@@ -1,0 +1,123 @@
+.loginPage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0f0ff, #f8f8ff);
+}
+
+.loginContainer {
+  background-color: white;
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+  border: 2px dotted #c0d0ff;
+}
+
+.title {
+  display: inline-block;
+  background-color: #000;
+  color: #fff;
+  padding: 0.5rem 1.5rem;
+  border-radius: 30px;
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.inputGroup {
+  margin-bottom: 1.25rem;
+  text-align: left;
+  position: relative;
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.eyeIcon {
+  position: absolute;
+  right: 15px;
+  top: 42px;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.forgotPassword {
+  text-align: right;
+  font-size: 0.875rem;
+  color: #005fff;
+  text-decoration: none;
+  margin-top: -10px;
+  margin-bottom: 1.5rem;
+}
+
+.signInButton {
+  background-color: #005fff;
+  color: white;
+  border: none;
+  padding: 0.85rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+}
+
+.orWith {
+  font-size: 0.875rem;
+  color: #777;
+  margin-bottom: 1rem;
+}
+
+.googleButton {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  border-radius: 8px;
+  width: 100%;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 2rem;
+}
+
+.registerLink {
+  font-size: 0.875rem;
+}
+
+.registerLink a {
+  color: #005fff;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.errorText {
+  color: #ff4d4f; /* Màu đỏ */
+  background-color: #fff2e8; /* Nền hồng nhạt */
+  border: 1px solid #ffccc7;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
