@@ -39,7 +39,9 @@ function App() {
                                     overflow: "hidden",
                                 }}
                             >
-                                <Sidebar />
+                                <div style={{flexShrink: 0}}>
+                                    <Sidebar/>
+                                </div>
                                 <div
                                     style={{
                                         flex: 1,

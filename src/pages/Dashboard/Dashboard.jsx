@@ -5,19 +5,36 @@ import styles from "./Dashboard.module.css";
 export default function Dashboard() {
     return (
         <div className={styles.wrapper}>
-
             <Sidebar />
 
             <main className={styles.main}>
                 <Header />
 
-                {/* ===================== CONTENT DASHBOARD ===================== */}
-                <div className={styles.content}>
+                {/* ⬆ TOP INFO CARD */}
+                <div className={styles.topInfoCard}>
 
-                    {/* ======= GRID LAYOUT ======= */}
+                    {/* Good Morning + Date + Separator */}
+                    <div className={styles.topLeft}>
+                        <div className={styles.goodRow}>
+                            <span className={styles.goodMorning}>Good morning</span>
+                            <div className={styles.separator}></div>
+                        </div>
+                        <span className={styles.dateText}>Thu, 31 Oct</span>
+                    </div>
+
+                    {/* City + Temp (khung nhỏ lại) */}
+                    <div className={styles.topCenter}>
+                        <span className={styles.city}>Ho Chi Minh city</span>
+                        <span className={styles.temp}>25°C</span>
+                    </div>
+
+                </div>
+
+                {/* MAIN CONTENT */}
+                <div className={styles.content}>
                     <div className={styles.dashboardGrid}>
 
-                        {/* ================== OVERVIEW CARD ================== */}
+                        {/* ===== OVERVIEW ===== */}
                         <div className={styles.overviewCard}>
                             <h3>Overview</h3>
                             <p className={styles.sub}>System Overview</p>
@@ -59,15 +76,13 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-
-                        {/* ================== FREQUENCY CHART ================== */}
+                        {/* ===== FREQUENCY ===== */}
                         <div className={styles.chartCard}>
                             <h3>Frequency</h3>
                             <canvas id="freqChart"></canvas>
                         </div>
 
-
-                        {/* ================== PERFORMANCE TABLE ================== */}
+                        {/* ===== PERFORMANCE ===== */}
                         <div className={styles.performanceCard}>
                             <h3>Performance</h3>
 
@@ -86,39 +101,38 @@ export default function Dashboard() {
                                     <td>1</td>
                                     <td>Avg. RSSI</td>
                                     <td><div className={styles.barBlue}></div></td>
-                                    <td>45%</td>
+                                    <td><span className={styles.percentBlue}>45%</span></td>
                                 </tr>
 
                                 <tr>
                                     <td>2</td>
                                     <td>Direct Path</td>
                                     <td><div className={styles.barGreen}></div></td>
-                                    <td>29%</td>
+                                    <td><span className={styles.percentGreen}>29%</span></td>
                                 </tr>
 
                                 <tr>
                                     <td>3</td>
                                     <td>Noise Level</td>
                                     <td><div className={styles.barTeal}></div></td>
-                                    <td>18%</td>
+                                    <td><span className={styles.percentTeal}>18%</span></td>
                                 </tr>
 
                                 <tr>
                                     <td>4</td>
                                     <td>BioBright Detergent</td>
                                     <td><div className={styles.barOrange}></div></td>
-                                    <td>25%</td>
+                                    <td><span className={styles.percentOrange}>25%</span></td>
                                 </tr>
                                 </tbody>
+
                             </table>
                         </div>
 
                     </div>
                 </div>
-                {/* ================= END CONTENT ================= */}
 
             </main>
-
         </div>
     );
 }

@@ -1,3 +1,4 @@
+// src/pages/LiveTracking/ThreeScene.jsx
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -31,6 +32,31 @@ export default function ThreeScene() {
         controls.enableDamping = true;
         controls.dampingFactor = 0.06;
 
+        // ⭐ QUAN TRỌNG: TỰ RESIZE THEO KHUNG (khi thu nhỏ sidebar)
+        function handleResize() {
+            if (!mount) return;
+            const width = mount.clientWidth;
+            const height = mount.clientHeight;
+            if (!width || !height) return;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        // Gọi 1 lần cho chắc
+        handleResize();
+
+        let resizeObserver;
+        if (window.ResizeObserver) {
+            resizeObserver = new ResizeObserver(() => {
+                handleResize();
+            });
+            resizeObserver.observe(mount);
+        } else {
+            window.addEventListener("resize", handleResize);
+        }
+
         // === LIGHT ===
         scene.add(new THREE.AmbientLight(0xffffff, 0.5));
         const dl = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -46,13 +72,11 @@ export default function ThreeScene() {
 
         // === MATERIALS ===
         const anchorMat = new THREE.MeshStandardMaterial({ color: 0x0004fc });
-
         const tagMat = new THREE.MeshStandardMaterial({
-            color: 0x22c55e,
-            emissive: 0x22c55e,
-            emissiveIntensity: 0.35,
+            color: 0xff5500,
+            emissive: 0xff5500,
+            emissiveIntensity: 0.3,
         });
-
         const baseMat = new THREE.MeshStandardMaterial({
             color: 0xfbbf24,
             emissive: 0xf59e0b,
@@ -63,26 +87,25 @@ export default function ThreeScene() {
         const tagGeo = new THREE.SphereGeometry(0.26, 32, 32);
         const baseGeo = new THREE.SphereGeometry(0.26, 32, 32);
 
-        // === OBJECTS ===
+        // === CREATE OBJECTS ===
         const anchors = {
             A0: new THREE.Mesh(anchorGeo, anchorMat),
             A1: new THREE.Mesh(anchorGeo, anchorMat),
             A2: new THREE.Mesh(anchorGeo, anchorMat),
             A3: new THREE.Mesh(anchorGeo, anchorMat),
         };
-        Object.values(anchors).forEach(a => scene.add(a));
+        Object.values(anchors).forEach((a) => scene.add(a));
 
         const tag = new THREE.Mesh(tagGeo, tagMat);
         const base = new THREE.Mesh(baseGeo, baseMat);
         scene.add(tag, base);
 
-        // === LINES – XANH LÁ ===
+        // === LINES ===
         const lineMat = new THREE.LineBasicMaterial({
-            color: 0x22c55e,
+            color: 0xff8c42,
             transparent: true,
-            opacity: 0.8,
+            opacity: 0.7,
         });
-
         const lines = {};
         Object.keys(anchors).forEach((id) => {
             const geo = new THREE.BufferGeometry();
@@ -91,7 +114,7 @@ export default function ThreeScene() {
             lines[id] = ln;
         });
 
-        // === BOX GROUP ===
+        // === BOX ===
         const boxGroup = new THREE.Group();
         let showBox = true;
         scene.add(boxGroup);
@@ -111,11 +134,10 @@ export default function ThreeScene() {
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(text, 64, 24);
-
             const tex = new THREE.CanvasTexture(canvas);
-            return new THREE.Sprite(
-                new THREE.SpriteMaterial({ map: tex })
-            );
+            const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex }));
+            sp.scale.set(1.4, 0.55, 1);
+            return sp;
         }
 
         const labels = {
@@ -123,13 +145,10 @@ export default function ThreeScene() {
             A1: createLabel("A1", "#0004FC"),
             A2: createLabel("A2", "#0004FC"),
             A3: createLabel("A3", "#0004FC"),
-            T0: createLabel("T0", "#22C55E"),
+            T0: createLabel("T0", "#d43f00"),
             B0: createLabel("B0", "#b45309"),
         };
-        Object.values(labels).forEach((lb) => {
-            lb.scale.set(1.4, 0.55, 1);
-            scene.add(lb);
-        });
+        Object.values(labels).forEach((lb) => scene.add(lb));
 
         // === FIREBASE REALTIME ===
         onValue(ref(rtdb, "uwb/anchors"), (snap) => {
@@ -137,7 +156,11 @@ export default function ThreeScene() {
             if (!data) return;
             Object.keys(anchors).forEach((id) => {
                 if (data[id]) {
-                    anchors[id].position.set(data[id].x, data[id].y, data[id].z);
+                    anchors[id].position.set(
+                        data[id].x,
+                        data[id].y,
+                        data[id].z
+                    );
                 }
             });
         });
@@ -154,13 +177,10 @@ export default function ThreeScene() {
             base.position.set(d.x, d.y, d.z);
         });
 
-        // ⭐ BOX CẤM – ĐỎ CẢNH BÁO ⭐
         onValue(ref(rtdb, "uwb/box/config"), (snap) => {
             const cfg = snap.val();
             if (!cfg) return;
-
             boxGroup.clear();
-
             const boxMesh = new THREE.Mesh(
                 new THREE.BoxGeometry(cfg.w, cfg.h, cfg.d),
                 new THREE.MeshBasicMaterial({
@@ -169,20 +189,22 @@ export default function ThreeScene() {
                     opacity: 0.25,
                 })
             );
-
             boxMesh.position.set(cfg.x, cfg.y, cfg.z);
             boxGroup.add(boxMesh);
         });
 
-        // === KEYBOARD: giữ nguyên phím L & B ===
+        // === KEYBOARD: L = nhãn + đường, B = hộp ===
         const showLabels = { current: true };
         const handleKey = (e) => {
             if (e.key.toLowerCase() === "l") {
                 showLabels.current = !showLabels.current;
-                Object.values(labels).forEach(lb => lb.visible = showLabels.current);
-                Object.values(lines).forEach(ln => ln.visible = showLabels.current);
+                Object.values(labels).forEach(
+                    (lb) => (lb.visible = showLabels.current)
+                );
+                Object.values(lines).forEach(
+                    (ln) => (ln.visible = showLabels.current)
+                );
             }
-
             if (e.key.toLowerCase() === "b") {
                 showBox = !showBox;
                 boxGroup.visible = showBox;
@@ -190,21 +212,25 @@ export default function ThreeScene() {
         };
         window.addEventListener("keydown", handleKey);
 
-        // === ANIMATE LOOP ===
+        // === ANIMATE ===
         function loop() {
             requestAnimationFrame(loop);
             controls.update();
 
-            // Labels follow
+            // Update labels
             Object.keys(anchors).forEach((id) => {
-                labels[id].position.copy(anchors[id].position).add({ x: 0, y: 0.6, z: 0 });
+                labels[id].position
+                    .copy(anchors[id].position)
+                    .add({ x: 0, y: 0.6, z: 0 });
                 labels[id].lookAt(camera.position);
             });
-
-            labels.T0.position.copy(tag.position).add({ x: 0, y: 0.6, z: 0 });
+            labels.T0.position
+                .copy(tag.position)
+                .add({ x: 0, y: 0.6, z: 0 });
             labels.T0.lookAt(camera.position);
-
-            labels.B0.position.copy(base.position).add({ x: 0, y: 0.8, z: 0 });
+            labels.B0.position
+                .copy(base.position)
+                .add({ x: 0, y: 0.8, z: 0 });
             labels.B0.lookAt(camera.position);
 
             // Update lines
@@ -217,16 +243,24 @@ export default function ThreeScene() {
                     anchors[id].position.y,
                     anchors[id].position.z,
                 ]);
-                lines[id].geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+                lines[id].geometry.setAttribute(
+                    "position",
+                    new THREE.BufferAttribute(pos, 3)
+                );
             });
 
             renderer.render(scene, camera);
         }
-
         loop();
 
+        // Cleanup
         return () => {
             window.removeEventListener("keydown", handleKey);
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            } else {
+                window.removeEventListener("resize", handleResize);
+            }
             mount.removeChild(renderer.domElement);
             renderer.dispose();
         };
