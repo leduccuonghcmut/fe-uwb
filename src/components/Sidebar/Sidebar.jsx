@@ -13,8 +13,8 @@ export default function Sidebar() {
   };
 
   const handleLogout = async () => {     // 🔥 thêm
-    await logoutUser();                  // gọi Firebase signOut
-    navigate("/login");                  // chuyển về login
+    await logoutUser();
+    navigate("/");
   };
 
   return (
@@ -68,7 +68,7 @@ export default function Sidebar() {
           {/* LOGOUT BUTTON */}
           <a
               className={`${styles.menuItem} ${styles.logout}`}
-              onClick={handleLogout}   // 🔥 chỉ sửa dòng này
+              onClick={handleLogout}
           >
             <i className="ri-logout-box-r-line"></i>
             <span>Log out</span>

@@ -46,3 +46,102 @@
     padding: 10px;
   }
 }
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-gap: 20px;
+  margin-top: 20px;
+}
+
+/* ===== Overview Card ===== */
+.overviewCard {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+.sub {
+  color: #999;
+  font-size: 13px;
+}
+
+.overviewRow {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.overviewItem {
+  flex: 1;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.iconSuccess {
+  width: 12px;
+  height: 12px;
+  background: #39d353;
+  border-radius: 50%;
+}
+
+.iconWarning {
+  width: 12px;
+  height: 12px;
+  background: #ffc107;
+  border-radius: 50%;
+}
+
+.iconAlert {
+  width: 12px;
+  height: 12px;
+  background: #ff4757;
+  border-radius: 50%;
+}
+
+.iconPurple {
+  width: 12px;
+  height: 12px;
+  background: #9c27b0;
+  border-radius: 50%;
+}
+
+/* ===== Chart ===== */
+.chartCard {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+/* ===== Performance Table ===== */
+.performanceCard {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+.table {
+  width: 100%;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.barBlue,
+.barGreen,
+.barTeal,
+.barOrange {
+  height: 6px;
+  border-radius: 4px;
+}
+
+.barBlue { width: 45%; background: #3b82f6; }
+.barGreen { width: 29%; background: #22c55e; }
+.barTeal { width: 18%; background: #14b8a6; }
+.barOrange { width: 25%; background: #f97316; }
