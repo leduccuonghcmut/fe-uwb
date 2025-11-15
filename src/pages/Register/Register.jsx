@@ -1,59 +1,90 @@
-import React from 'react';
-import styles from './Register.module.css';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import styles from "./Register.module.css";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!email || !pw || !confirm) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    if (pw !== confirm) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    navigate("/dashboard");
+  };
+
   return (
-    <div className={styles.registerPage}>
-      <div className={styles.registerContainer}>
-        <h2 className={styles.title}>Register</h2>
+      <div className={styles.pageWrapper}>
+        <div className={styles.card}>
+          <h2 className={styles.titleSmall}>Create Account</h2>
 
-        <form className={styles.registerForm}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="email">Email</label>
+          {/* ERROR BOX */}
+          {error && <div className={styles.errorBox}>{error}</div>}
+
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <label className={styles.label}>Email</label>
             <input
-              type="email"
-              id="email"
-              placeholder="username@gmail.com"
+                type="email"
+                placeholder="username@gmail.com"
+                className={styles.input}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
             />
-          </div>
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="password">Password</label>
+            <label className={styles.label}>Password</label>
             <input
-              type="password"
-              id="password"
-              placeholder="Password"
+                type="password"
+                placeholder="Password"
+                className={styles.input}
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
             />
-            <span className={styles.eyeIcon}>👁️</span>
-          </div>
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="confirmPassword">Confirm password</label>
+            <label className={styles.label}>Confirm Password</label>
             <input
-              type="password"
-              id="confirmPassword"
-              placeholder="Password"
+                type="password"
+                placeholder="Confirm Password"
+                className={styles.input}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
             />
-            <span className={styles.eyeIcon}>👁️</span>
-          </div>
 
-          <button type="submit" className={styles.signUpButton}>
-            Sign up
+            <button type="submit" className={styles.primaryBtn}>
+              Sign up
+            </button>
+          </form>
+
+          <div className={styles.or}>Or Continue With</div>
+
+          <button className={styles.googleBtn}>
+            <img
+                src="https://www.svgrepo.com/show/355037/google.svg"
+                className={styles.googleIcon}
+            />
           </button>
-        </form>
 
-        <p className={styles.orWith}>Or Continue With</p>
-
-        <button className={styles.googleButton}>
-          G
-        </button>
-
-        <p className={styles.loginLink}>
-          Have an account yet? <Link to="/login">Log in now</Link>
-        </p>
+          <p className={styles.bottomText}>
+            Already have an account?
+            <Link to="/login" className={styles.registerLink}>
+              {" "}
+              Login now
+            </Link>
+          </p>
+        </div>
       </div>
-    </div>
   );
 };
 

@@ -1,53 +1,119 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import styles from './Home.module.css';
+import React, { useEffect } from "react";
+import styles from "./Home.module.css";
+import { Link } from "react-router-dom";
 
 const Home = () => {
-  return (
-    <div className={styles.homePage}>
-      <nav className={styles.navbar}>
-        <div className={styles.brand}>Positioning System</div>
-        <div className={styles.navLinks}>
-          <a href="#" className={styles.navItem}>Feature</a>
-          <a href="#" className={styles.navItem}>About us</a>
-          {/* Sửa 'Help' thành nút <Link> */}
-          <Link to="/login" className={`${styles.navItem} ${styles.helpButton}`}>Help</Link>
-        </div>
-      </nav>
+    useEffect(() => {
+        const preloader = document.getElementById("preloader");
+        const main = document.getElementById("mainContent");
 
-      <main className={styles.heroSection}>
-        <span className={styles.newIntegration}>NEW Latest integration just arrived</span>
-        <h1 className={styles.mainTitle}>
-          Boost your <br /> UWB localization accuracy
-        </h1>
-        <p className={styles.description}>
-          Deliver precise, real-time location tracking with a scalable multi-anchor system, <br />
-          designed for smart environments and seamless integration
-        </p>
-        <Link to="/login" className={styles.enterWorkspaceButton}>
-          Enter Workspace
-        </Link>
-      </main>
+        setTimeout(() => {
+            if (preloader) {
+                preloader.style.opacity = "0";
+                preloader.style.visibility = "hidden";
+            }
+            if (main) {
+                main.style.opacity = "1";
+                main.style.visibility = "visible";
+                main.classList.add(styles.fadeIn);
+            }
+        }, 1800);
+    }, []);
 
-      <div className={styles.authPrompt}>
-        Don't have an account yet? Click <Link to="/register" className={styles.signUpLink}>Sign up</Link> to get started.
-      </div>
+    return (
+        <>
+            {/* PRELOADER */}
+            <div id="preloader" className={styles.preloader}>
+                <div className={styles.loaderContent}>
+                    <div className={styles.brandLoader}>Positioning System</div>
+                    <div className={styles.loaderBar}></div>
+                </div>
+            </div>
 
-      <div className={styles.socialIcons}>
-        {/* Bạn cần có 2 ảnh này trong thư mục /public */}
-        <a href="#" className={styles.socialIcon}>
-          <img src="/facebook-icon.png" alt="Facebook" onError={(e) => e.target.style.display='none'} />
-        </a>
-        <a href="#" className={styles.socialIcon}>
-          <img src="/messenger-icon.png" alt="Messenger" onError={(e) => e.target.style.display='none'} />
-        </a>
-      </div>
+            {/* MAIN CONTENT */}
+            <div className={styles.pageWrapper}>
+                <div className={styles.frame} id="mainContent">
 
-      <footer className={styles.footer}>
-        <a href="#">Terms of Service</a> • <a href="#">Privacy Policy</a>
-      </footer>
-    </div>
-  );
+                    <div className={styles.brand}>Positioning System</div>
+
+                    <div className={styles.topNavWrapper}>
+                        <div className={styles.topNav}>
+                            <div className={styles.topItem}>
+                                Feature <i className="ri-arrow-down-s-fill"></i>
+                            </div>
+                            <div className={styles.topItem}>
+                                About us <i className="ri-arrow-down-s-fill"></i>
+                            </div>
+                            <div className={`${styles.topItem} ${styles.active}`}>
+                                Help <span className={styles.helpDot}></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <main className={styles.mainContent}>
+                        <div className={styles.badge}>
+                            <span className={styles.dot}>NEW</span> Latest integration just arrived
+                        </div>
+
+                        <h1 className={styles.h1}>Boost your</h1>
+                        <div className={styles.headlineMain}>UWB localization accuracy</div>
+
+                        <p className={styles.subtitle}>
+                            Deliver precise, real-time location tracking with a scalable
+                            multi-anchor system, designed for smart environments and seamless integration.
+                        </p>
+
+                        <Link to="/login">
+                            <button className={styles.primaryBtn}>Enter Workspace</button>
+                        </Link>
+
+                        <p className={styles.authNote}>
+                            Don’t have an account yet? Click
+                            <Link to="/register">
+                                <button className={styles.pill}>Sign up</button>
+                            </Link> to get started.
+                        </p>
+                    </main>
+
+                    <div className={styles.socials}>
+                        <a href="#" aria-label="Facebook">
+                            <i className="ri-facebook-fill"></i>
+                        </a>
+                        <a href="#" aria-label="Messenger">
+                            <i className="ri-messenger-fill"></i>
+                        </a>
+                    </div>
+
+                    <footer className={styles.footer}>
+                        Terms of Service • Privacy Policy
+                    </footer>
+                </div>
+            </div>
+
+            {/* Fallback: Nếu CDN chậm, vẫn hiển thị icon bằng SVG inline */}
+            <style jsx>{`
+                @import url('https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css');
+
+                /* Fallback icon nếu Remix Icons chưa load */
+                .ri-arrow-down-s-line::before {
+                    content: "↓";
+                    font-family: sans-serif;
+                    font-size: 12px;
+                    margin-left: 4px;
+                }
+                .ri-facebook-fill::before {
+                    content: "f";
+                    font-family: sans-serif;
+                    font-weight: bold;
+                }
+                .ri-messenger-fill::before {
+                    content: "m";
+                    font-family: sans-serif;
+                    font-weight: bold;
+                }
+            `}</style>
+        </>
+    );
 };
 
 export default Home;

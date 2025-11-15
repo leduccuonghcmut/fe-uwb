@@ -1,180 +1,48 @@
-.dashboardLayout {
+.wrapper {
   display: flex;
-  min-height: 100vh;
-  background-color: #f7f9fc; /* Màu nền sáng hơn một chút */
+  height: 100vh;
+  background: #fff;
 }
 
-.mainContent {
-  flex-grow: 1;
-  padding: 1.5rem 2rem;
-  display: flex;
-  flex-direction: column;
-  overflow-x: hidden; /* Tránh cuộn ngang */
-}
-
-.contentGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: auto auto;
-  gap: 1.5rem;
-  margin-top: 1rem;
-}
-
-.sectionTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #333;
-  margin-top: 0;
-  margin-bottom: 0.25rem;
-}
-
-.sectionSubtitle {
-  font-size: 0.9rem;
-  color: #888;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-}
-
-/* Overview Section */
-.overviewSection {
-  grid-column: span 2;
-  background-color: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.overviewCards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-/* Frequency Chart */
-.frequencyChart {
-  grid-column: span 1;
-  background-color: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+/* MAIN CONTENT AREA */
+.main {
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.chartContainer {
-  flex-grow: 1;
-  width: 100%;
+/* CONTENT */
+.content {
+  flex: 1;
+  padding: 20px;
 }
 
-.chartPlaceholder {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  object-fit: cover;
-}
+/* ================================
+      RESPONSIVE LAYOUT
+   ================================ */
 
-.chartLegend {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f0f0f0;
-}
-
-.legendItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 0.8rem;
-  color: #777;
-}
-
-.legendItem strong {
-  font-size: 1rem;
-  color: #333;
-  margin-top: 0.25rem;
-}
-
-.legendColor {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  margin-bottom: 0.5rem;
-}
-
-/* Performance Table */
-.performanceSection {
-  grid-column: span 3;
-  background-color: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.performanceTable {
-  width: 100%;
-}
-
-.tableRow {
-  display: grid;
-  grid-template-columns: 0.5fr 3fr 3fr 1fr;
-  padding: 1rem 0;
-  border-bottom: 1px solid #f0f0f0;
-  align-items: center;
-  font-size: 0.9rem;
-}
-
-.tableRow:last-child {
-  border-bottom: none;
-}
-
-.tableHeader {
-  font-weight: 600;
-  color: #888;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  border-bottom: 2px solid #f0f0f0;
-}
-
-.tableRow span {
-  color: #555;
-  padding-right: 1rem;
-}
-
-.progressBarWrapper {
-  background-color: #f0f0f0;
-  border-radius: 10px;
-  height: 10px;
-  overflow: hidden;
-  width: 90%;
-}
-
-.progressBar {
-  height: 100%;
-  border-radius: 10px;
-}
-
-.percentLabel {
-  font-weight: 600;
-  text-align: right;
-  padding-right: 0 !important;
-}
-
-/* Responsive adjustments */
+/* Màn hình dưới 1200px */
 @media (max-width: 1200px) {
-  .contentGrid {
-    grid-template-columns: 1fr;
-  }
-  .overviewSection, .frequencyChart, .performanceSection {
-    grid-column: span 1;
-  }
-  .overviewCards {
-    grid-template-columns: repeat(2, 1fr);
+  .wrapper {
+    padding-left: 0;
   }
 }
 
+/* Màn hình nhỏ dưới 992px */
+@media (max-width: 992px) {
+  .wrapper {
+    flex-direction: column;   /* Sidebar xuống dưới hoặc collapse */
+    height: auto;
+  }
+
+  .main {
+    width: 100%;
+  }
+}
+
+/* Màn hình mobile */
 @media (max-width: 768px) {
-  .mainContent { padding: 1rem; }
-  .overviewCards { grid-template-columns: 1fr; }
-  .tableRow { grid-template-columns: 0.5fr 2fr 2fr 1fr; font-size: 0.85rem; }
+  .content {
+    padding: 10px;
+  }
 }

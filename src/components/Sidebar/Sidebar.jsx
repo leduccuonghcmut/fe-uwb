@@ -1,75 +1,67 @@
-import React, { useState } from 'react';
-import styles from './Sidebar.module.css';
-import { NavLink, Link } from 'react-router-dom'; 
+import { useState } from "react";
+import styles from "./Sidebar.module.css";
 
-const icons = {
-  dashboard: '📊',
-  tracking: '📍',
-  config: '⚙️',
-  advance: '➡️',
-  export: '📤',
-  settings: '🔧',
-  logout: '🚪'
-};
+export default function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
 
-const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const toggleSidebar = () => {
+    setCollapsed(!collapsed);
+  };
 
   return (
-    <div className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
-      <div className={styles.sidebarHeader}>
-        <span 
-          className={styles.toggleButton} 
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? '»' : '«'}
-        </span>
-        <div className={styles.brand}>Positioning System</div>
-      </div>
-      
-      <nav className={styles.nav}>
-        <NavLink to="/dashboard" className={({ isActive }) => isActive ? `${styles.navItem} ${styles.active}` : styles.navItem}>
-          <span className={styles.icon}>{icons.dashboard}</span> <span className={styles.text}>Dashboard</span>
-        </NavLink>
-        <NavLink to="/live-tracking" className={({ isActive }) => isActive ? `${styles.navItem} ${styles.active}` : styles.navItem}>
-          <span className={styles.icon}>{icons.tracking}</span> <span className={styles.text}>Live Tracking</span>
-        </NavLink>
-        <NavLink to="/system-config" className={({ isActive }) => isActive ? `${styles.navItem} ${styles.active}` : styles.navItem}>
-          <span className={styles.icon}>{icons.config}</span> <span className={styles.text}>System Config</span>
-        </NavLink>
-        <NavLink to="/advance-feature" className={({ isActive }) => isActive ? `${styles.navItem} ${styles.active}` : styles.navItem}>
-          <span className={styles.icon}>{icons.advance}</span> <span className={styles.text}>Advance feature</span>
-        </NavLink>
-        <NavLink to="/export" className={({ isActive }) => isActive ? `${styles.navItem} ${styles.active}` : styles.navItem}>
-          <span className={styles.icon}>{icons.export}</span> <span className={styles.text}>Export</span>
-        </NavLink>
-      </nav>
+      <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
 
-      <div className={styles.sidebarFooter}>
-        <div className={styles.userSection}>
-          <img 
-            src="/gustavo-avatar.png" 
-            alt="Gustavo Xavier" 
-            className={styles.userAvatar} 
-          />
+        <div className={styles.topSection}>
+          <span className={styles.logoText}>Positioning System</span>
+
+          <button className={styles.toggleBtn} onClick={toggleSidebar}>
+            <i className="ri-menu-line"></i>
+          </button>
+        </div>
+
+        <nav className={styles.menu}>
+          <a className={`${styles.menuItem} ${styles.active}`}>
+            <i className="ri-pie-chart-2-fill"></i>
+            <span>Dashboard</span>
+          </a>
+          <a className={styles.menuItem}>
+            <i className="ri-focus-2-line"></i>
+            <span>Live Tracking</span>
+          </a>
+          <a className={styles.menuItem}>
+            <i className="ri-settings-3-line"></i>
+            <span>System Config</span>
+          </a>
+          <a className={styles.menuItem}>
+            <i className="ri-magic-line"></i>
+            <span>Advance Feature</span>
+          </a>
+          <a className={styles.menuItem}>
+            <i className="ri-download-2-line"></i>
+            <span>Export</span>
+          </a>
+        </nav>
+
+        <div className={styles.bottomMenu}>
           <div className={styles.userInfo}>
-            <div className={styles.userName}>Gustavo Xavier</div>
-            <div className={styles.userRole}>Admin</div>
+            <i className="ri-user-line" style={{ fontSize: "20px" }}></i>
+            <div>
+              <p className={styles.name}>Gustavo Xavier</p>
+              <span className={styles.role}>Admin</span>
+            </div>
           </div>
-        </div>
-        <div className={styles.settings}>
-          <NavLink to="/settings" className={styles.settingsItem}>
-            <span className={styles.icon}>{icons.settings}</span> <span className={styles.text}>Settings</span>
-          </NavLink>
-          
-          {/*hoạt động */}
-          <Link to="/login" className={styles.settingsItem}>
-            <span className={styles.icon}>{icons.logout}</span> <span className={styles.text}>Log out</span>
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-};
 
-export default Sidebar;
+          <a className={styles.menuItem}>
+            <i className="ri-settings-2-line"></i>
+            <span>Settings</span>
+          </a>
+
+          {/* LOGOUT BUTTON */}
+          <a className={`${styles.menuItem} ${styles.logout}`} onClick={() => window.location.href = "/"}>
+            <i className="ri-logout-box-r-line"></i>
+            <span>Log out</span>
+          </a>
+        </div>
+      </aside>
+  );
+}
