@@ -1,0 +1,107 @@
+/* FULL FIX – KHÔNG LỆCH TRÁI KHÔNG CHẶN CANVAS */
+
+/* Chiếm toàn bộ vùng còn lại sau khi Sidebar đã lấy không gian */
+.container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    background: #ffffff;
+    overflow: hidden;
+}
+
+/* Header không tạo padding-left dư */
+.header {
+    font-size: 18px;
+    font-weight: 700;
+    padding: 10px 0 10px 0;
+    text-indent: 20px;
+    background: #0004fc;
+    color: #fff;
+}
+
+/* Canvas full toàn bộ còn lại */
+.canvasWrapper {
+    position: absolute;
+    top: 48px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* LEGEND */
+.legend {
+    position: absolute;
+    top: 70px;
+    left: 16px;
+    padding: 12px 16px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    font-size: 13px;
+    z-index: 10;
+    min-width: 210px;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.legendItem:last-child {
+    margin-bottom: 0;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.blue { background: #0004fc; }
+.orange { background: #ff5500; }
+.yellow { background: #fbbf24; }
+.green { background: #86efac; }
+
+.line {
+    width: 16px;
+    height: 3px;
+    border-radius: 999px;
+    background: #ff8c42;
+}
+
+/* Controls bottom right */
+.controlsHelp {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #444;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .legend {
+        top: 60px;
+        left: 10px;
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .controlsHelp {
+        left: 10px;
+        right: auto;
+        bottom: 10px;
+        font-size: 11px;
+    }
+}

@@ -1,6 +1,15 @@
+// src/components/Header/Header.jsx
 import styles from "./Header.module.css";
+import { useLocation } from "react-router-dom";
 
 export default function Header() {
+    const location = useLocation();
+
+    // ❗ ẨN HEADER khi đang ở trang Live Tracking
+    const hideHeader = location.pathname === "/live";
+
+    if (hideHeader) return null;
+
     return (
         <header className={styles.topbar}>
 

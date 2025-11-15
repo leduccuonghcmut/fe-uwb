@@ -29,14 +29,21 @@ export default function Sidebar() {
         </div>
 
         <nav className={styles.menu}>
-          <a className={`${styles.menuItem} ${styles.active}`}>
+          <a
+              className={`${styles.menuItem} ${styles.active}`}
+              onClick={() => navigate("/dashboard")}
+          >
             <i className="ri-pie-chart-2-fill"></i>
             <span>Dashboard</span>
           </a>
-          <a className={styles.menuItem}>
+          <a
+              className={styles.menuItem}
+              onClick={() => navigate("/live")}
+          >
             <i className="ri-focus-2-line"></i>
             <span>Live Tracking</span>
           </a>
+
           <a className={styles.menuItem}>
             <i className="ri-settings-3-line"></i>
             <span>System Config</span>
