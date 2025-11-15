@@ -1,11 +1,20 @@
 import { useState } from "react";
 import styles from "./Sidebar.module.css";
 
+import { logoutUser } from "../../service/auth"; // 🔥 thêm
+import { useNavigate } from "react-router-dom"; // 🔥 thêm
+
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate(); // 🔥 thêm
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
+  };
+
+  const handleLogout = async () => {     // 🔥 thêm
+    await logoutUser();                  // gọi Firebase signOut
+    navigate("/login");                  // chuyển về login
   };
 
   return (
@@ -57,7 +66,10 @@ export default function Sidebar() {
           </a>
 
           {/* LOGOUT BUTTON */}
-          <a className={`${styles.menuItem} ${styles.logout}`} onClick={() => window.location.href = "/"}>
+          <a
+              className={`${styles.menuItem} ${styles.logout}`}
+              onClick={handleLogout}   // 🔥 chỉ sửa dòng này
+          >
             <i className="ri-logout-box-r-line"></i>
             <span>Log out</span>
           </a>

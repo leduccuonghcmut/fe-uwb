@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
 
+import { loginUser } from "../../service/auth";
+import { loginWithGoogle } from "../../service/auth";   // 🔥 Thêm dòng này
+
 const Login = () => {
   const navigate = useNavigate();
 
@@ -10,27 +13,37 @@ const Login = () => {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !pw) {
       setError("Please enter both email and password.");
       return;
     }
 
-    // CHƯA CÓ DATABASE -> để trống login logic
-    // TỰ CHUYỂN DASHBOARD
-    navigate("/dashboard");
+    try {
+      await loginUser(email, pw);
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Wrong email or password!");
+    }
+  };
+
+  // 🔥 Thêm Google Login nhưng không sửa giao diện
+  const handleGoogle = async () => {
+    try {
+      await loginWithGoogle();
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Google login failed!");
+    }
   };
 
   return (
       <div className={styles.pageWrapper}>
         <div className={styles.card}>
-          {/* SMALL TITLE */}
           <h2 className={styles.titleSmall}>Enter Workspace</h2>
 
-          {/* ERROR */}
           {error && <div className={styles.errorBox}>{error}</div>}
 
-          {/* EMAIL */}
           <label className={styles.label}>Email</label>
           <input
               type="email"
@@ -40,7 +53,6 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
           />
 
-          {/* PASSWORD */}
           <label className={styles.label}>Password</label>
           <div className={styles.passwordWrapper}>
             <input
@@ -54,7 +66,6 @@ const Login = () => {
                 }}
             />
 
-            {/* Show eye ONLY when pw has content */}
             {pw.length > 0 && (
                 <i
                     className={`${styles.eyeIcon} ${
@@ -65,22 +76,20 @@ const Login = () => {
             )}
           </div>
 
-          {/* SIGN IN BUTTON */}
           <button className={styles.signinBtn} onClick={handleLogin}>
             Sign in
           </button>
 
           <div className={styles.or}>Or Continue With</div>
 
-          {/* GOOGLE BUTTON */}
-          <button className={styles.googleBtn}>
+          {/* 🔥 Chỉ thêm onClick, không đổi UI */}
+          <button className={styles.googleBtn} onClick={handleGoogle}>
             <img
                 src="https://www.svgrepo.com/show/355037/google.svg"
                 className={styles.googleIcon}
             />
           </button>
 
-          {/* REGISTER LINK */}
           <div className={styles.registerText}>
             Don’t have an account yet?
             <Link to="/register" className={styles.registerLink}>

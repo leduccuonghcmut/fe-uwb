@@ -2,17 +2,20 @@ import { auth } from "./firebase";
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
-    signOut
+    signOut,
+    GoogleAuthProvider,
+    signInWithPopup
 } from "firebase/auth";
 
-export const registerUser = async (email, password) => {
-    return await createUserWithEmailAndPassword(auth, email, password);
-};
+export const registerUser = (email, password) =>
+    createUserWithEmailAndPassword(auth, email, password);
 
-export const loginUser = async (email, password) => {
-    return await signInWithEmailAndPassword(auth, email, password);
-};
+export const loginUser = (email, password) =>
+    signInWithEmailAndPassword(auth, password);
 
-export const logoutUser = async () => {
-    return await signOut(auth);
-};
+export const logoutUser = () => signOut(auth);
+
+const provider = new GoogleAuthProvider();
+
+export const loginWithGoogle = () =>
+    signInWithPopup(auth, provider);

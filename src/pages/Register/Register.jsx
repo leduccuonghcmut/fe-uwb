@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import styles from "./Register.module.css";
 import { Link, useNavigate } from "react-router-dom";
 
+import { registerUser } from "../../service/auth";
+import { loginWithGoogle } from "../../service/auth";   // 🔥 thêm
+
 const Register = () => {
   const navigate = useNavigate();
 
@@ -10,7 +13,7 @@ const Register = () => {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !pw || !confirm) {
@@ -23,7 +26,22 @@ const Register = () => {
       return;
     }
 
-    navigate("/dashboard");
+    try {
+      await registerUser(email, pw);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // 🔥 Google login cho Register
+  const handleGoogle = async () => {
+    try {
+      await loginWithGoogle();
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Google login failed!");
+    }
   };
 
   return (
@@ -31,7 +49,6 @@ const Register = () => {
         <div className={styles.card}>
           <h2 className={styles.titleSmall}>Create Account</h2>
 
-          {/* ERROR BOX */}
           {error && <div className={styles.errorBox}>{error}</div>}
 
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -69,7 +86,8 @@ const Register = () => {
 
           <div className={styles.or}>Or Continue With</div>
 
-          <button className={styles.googleBtn}>
+          {/* 🔥 chỉ thêm onClick, không đổi UI */}
+          <button className={styles.googleBtn} onClick={handleGoogle}>
             <img
                 src="https://www.svgrepo.com/show/355037/google.svg"
                 className={styles.googleIcon}
