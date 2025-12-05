@@ -1,0 +1,334 @@
+/* KHUNG TRANG CHUNG – ĐỒNG NHẤT CÁC PAGE */
+.page {
+    padding: 24px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: #f6f7fb;
+    min-height: 100%;
+}
+
+/* HÀNG TRÊN: TITLE + 2 NÚT CONFIG */
+.topRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* PILL BUTTON (Energy saver / Auto calibration) */
+.switchGroup {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pillBtn {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 18px;
+    background: #e5e7eb;
+    color: #111827;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.pillActive {
+    background: #0004fc;
+    color: #ffffff;
+}
+
+.pillIcon {
+    font-size: 14px;
+}
+
+.toggleDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #22c55e;
+}
+
+/* CARD CHÍNH – CONFIG TABLE */
+.card {
+    background: #ffffff;
+    border-radius: 22px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    padding: 20px 24px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Thanh trên của card: tiêu đề + search + sort */
+.cardTopBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.cardTitle {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.cardControls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* SEARCH NHỎ BÊN TRONG CARD */
+.innerSearch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f3f4f6;
+    border-radius: 999px;
+    padding: 4px 12px;
+    min-width: 180px;
+}
+
+.innerSearch i {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.innerSearch input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+}
+
+/* SORT BY */
+.sortBy {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.sortBtn {
+    border: none;
+    border-radius: 999px;
+    padding: 4px 12px;
+    background: #e5e7eb;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* LOADING */
+.skeleton {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* TABLE */
+.table {
+    margin-top: 6px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.headerRow,
+.row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1.5fr 1fr;
+    padding: 10px 16px;
+    align-items: center;
+}
+
+.headerRow {
+    background: #f9fafb;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.row {
+    background: #ffffff;
+    font-size: 13px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.row:nth-child(even) {
+    background: #fdfdfd;
+}
+
+/* Ô SELECT CATEGORY */
+.categoryCell select {
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    font-size: 13px;
+    background: #ffffff;
+}
+
+/* STATUS */
+.online {
+    color: #16a34a;
+    font-weight: 500;
+}
+
+.offline {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+/* FOOTER CARD */
+.cardFooter {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.saveBtn {
+    padding: 10px 26px;
+    border-radius: 999px;
+    border: none;
+    background: #22c55e;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* FORBIDDEN COORDINATES CARD */
+.forbiddenCard {
+    background: #ffffff;
+    border-radius: 22px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    padding: 18px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.forbiddenHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.forbiddenTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.forbiddenActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.addBtn {
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: #22c55e;
+    color: #ffffff;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.clearAllBtn {
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* BODY LIST FORBIDDEN */
+.forbiddenBody {
+    margin-top: 6px;
+}
+
+.forbiddenRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 13px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.clearBtn {
+    border: none;
+    border-radius: 999px;
+    padding: 4px 12px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .page {
+        padding: 18px 16px 24px;
+    }
+
+    .cardTopBar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cardControls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .headerRow,
+    .row {
+        grid-template-columns: 1.7fr 1.7fr 1.5fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .topRow {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .switchGroup {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .cardControls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .innerSearch {
+        width: 100%;
+    }
+
+    .sortBy {
+        justify-content: flex-end;
+    }
+}

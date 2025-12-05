@@ -2,7 +2,8 @@
   display: flex;
   /* dùng min-height để trang có thể scroll trên mobile */
   min-height: 100vh;
-  background: #fff;
+  background: linear-gradient(180deg, #f6f9fb 0%, #e9eff2 45%, #d8e1e6 100%);
+
 }
 
 .main {
@@ -22,13 +23,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
   padding: 14px 14px;
   border-radius: 16px;
   margin-top: 5px;
   width: 30%;
   margin-left: 24px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  background: #F5F6F8;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
 }
 
 /* === LEFT === */
@@ -118,10 +119,10 @@
 
 /* ===== OVERVIEW ===== */
 .overviewCard {
-  background: #fff;
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  background: #F5F6F8;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
 }
 
 .sub {
@@ -158,18 +159,18 @@
 
 /* ===== Frequency ===== */
 .chartCard {
-  background: #fff;
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  background: #F5F6F8;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
 }
 
 /* ===== Performance ===== */
 .performanceCard {
-  background: #fff;
+  background: #F5F6F8;
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
 }
 
 .table {
@@ -283,3 +284,5 @@
     padding: 3px 10px;
   }
 }
+
+

@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LiveTracking from "./pages/LiveTracking/LiveTracking";
 import Sidebar from "./components/Sidebar/Sidebar";
+import SystemConfig from "./pages/SystemConfig/SystemConfig";
 
 function App() {
     return (
@@ -26,6 +27,39 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+
+                <Route
+                    path="/config"
+                    element={
+                        <ProtectedRoute>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    height: "100vh",
+                                    width: "100vw",
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <div style={{ flexShrink: 0 }}>
+                                    <Sidebar />
+                                </div>
+
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: "100vh",
+                                        overflowY: "auto",
+                                        background: "#f7f8fa",
+                                    }}
+                                >
+                                    <SystemConfig />
+                                </div>
+                            </div>
+                        </ProtectedRoute>
+                    }
+                />
+
+
 
                 <Route
                     path="/live"

@@ -1,8 +1,19 @@
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
 import styles from "./Dashboard.module.css";
-
+import Welcome from "../Dashboard/Welcome";
+import {useState} from "react";
 export default function Dashboard() {
+    const [showWelcome, setShowWelcome] = useState(true);
+
+    const handleWelcomeFinish = () => {
+        setShowWelcome(false);
+    };
+
+    // Nếu đang trong 1.5 giây đầu → chỉ hiện màn hình Welcome
+    if (showWelcome) {
+        return <Welcome onFinish={handleWelcomeFinish} />;
+    }
     return (
         <div className={styles.wrapper}>
             <Sidebar />

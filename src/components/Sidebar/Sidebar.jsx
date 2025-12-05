@@ -44,10 +44,14 @@ export default function Sidebar() {
             <span>Live Tracking</span>
           </a>
 
-          <a className={styles.menuItem}>
+          <a
+              className={styles.menuItem}
+              onClick={() => navigate("/config")}
+          >
             <i className="ri-settings-3-line"></i>
             <span>System Config</span>
           </a>
+
           <a className={styles.menuItem}>
             <i className="ri-magic-line"></i>
             <span>Advance Feature</span>
@@ -60,7 +64,7 @@ export default function Sidebar() {
 
         <div className={styles.bottomMenu}>
           <div className={styles.userInfo}>
-            <i className="ri-user-line" style={{ fontSize: "20px" }}></i>
+            <i className="ri-user-line" style={{fontSize: "20px" }}></i>
             <div>
               <p className={styles.name}>Gustavo Xavier</p>
               <span className={styles.role}>Admin</span>

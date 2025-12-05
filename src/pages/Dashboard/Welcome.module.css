@@ -1,0 +1,79 @@
+/* src/components/Welcome/Welcome.module.css */
+.welcomeOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: linear-gradient(135deg, #A2C5FF 0%, #E0EAFF 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.fadeOut { opacity: 0; pointer-events: none; }
+
+.welcomeContent { text-align: center; }
+
+/* Chữ WELCOME – gradient đen → xanh đậm + viết nhanh trong 1.4s */
+.welcomeText {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    font-size: 96px;
+    font-weight: 750;
+    letter-spacing: -0.018em;
+    margin: 0;
+
+    background: linear-gradient(90deg,
+    #000000 0%,
+    #0004FC 35%,
+    #4f8fff 70%,
+    #ffffff 100%
+    );
+    background-size: 300% 100%;
+    background-position: 100% 0;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 16px rgba(0, 4, 252, 0.4));
+
+    /* Viết chữ + ánh kim trong 2 giây */
+    animation:
+            writeFast 1.4s cubic-bezier(0.2, 1, 0.3, 1) forwards,
+            shine 0.7s ease-out 1.3s forwards;
+}
+
+.subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.95);
+    margin-top: 40px;
+    opacity: 0;
+    animation: fadeInUp 0.8s ease-out 1s forwards;
+}
+
+/* Keyframes siêu nhanh */
+@keyframes writeFast {
+    to { background-position: 0 0; }
+}
+
+@keyframes shine {
+    0%   { background-position: 100% 0; }
+    50%  { background-position: -100% 0; }
+    100% { background-position: 0 0; }
+}
+
+@keyframes fadeInUp {
+    to { opacity: 0.9; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .welcomeText { font-size: 72px; }
+    .subtitle { font-size: 17px; margin-top: 32px; }
+}
+@media (max-width: 480px) {
+    .welcomeText { font-size: 56px; }
+}

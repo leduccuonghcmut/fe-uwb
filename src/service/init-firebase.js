@@ -1,10 +1,10 @@
 // src/service/init-firebase.js
-// CHẠY 1 LẦN ĐỂ TẠO CẤU TRÚC uwb/... TRÊN FIREBASE
+// TẠO TOÀN BỘ CẤU TRÚC UWB + CONFIG CHO GIAO DIỆN MỚI
 
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set } from "firebase/database";
 
-// CẤU HÌNH CỦA BẠN
+// CẤU HÌNH FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyBGT9Cpfhj551AB05Q-L94OCxL5ARDth_8",
     authDomain: "dauwb-58554.firebaseapp.com",
@@ -18,8 +18,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// DỮ LIỆU DEMO
-const demoData = {
+// ==== DỮ LIỆU UWB 3D CŨ (GIỮ NGUYÊN) ====
+const uwbData = {
     anchors: {
         A0: { x: 0, y: 0, z: 0 },
         A1: { x: 6, y: 0, z: 0 },
@@ -33,37 +33,51 @@ const demoData = {
         B0: { x: 3, y: 0, z: -2 }
     },
     box: {
-        config: {
-            x: 3,
-            y: 1.5,
-            z: 3,
-            w: 2,
-            h: 3,
-            d: 4
-        }
+        config: { x: 3, y: 1.5, z: 3, w: 2, h: 3, d: 4 }
     }
 };
 
-// GHI VÀO ĐÚNG ĐƯỜNG DẪN: /uwb
-console.log("Đang tạo dữ liệu tại /uwb ...");
+// ==== ★ DỮ LIỆU CONFIG MỚI THÊM CHO TRANG SYSTEM CONFIG ★ ====
+const uwbConfig = {
+    devices: {
+        "DD:4A:2E:AE:8E:B2": {
+            coord: "2.0 3.0 7.0",
+            type: "Anchor",
+            status: "Online"
+        },
+        "U1": {
+            coord: "2.0 3.0 7.0",
+            type: "Tag",
+            status: "Offline"
+        },
+        "D4:35:2F:6D:86:06": {
+            coord: "2.0 3.0 7.0",
+            type: "RTK Base",
+            status: "Offline"
+        }
+    },
 
-set(ref(db, "uwb"), demoData)
+    forbidden: [
+        "2.0 3.0 5.0"
+    ],
+
+    general: {
+        energySaver: true,
+        autoCalibration: false
+    }
+};
+
+// PUSH LÊN FIREBASE
+console.log("Đang tạo cấu trúc /uwb và /uwbConfig ...");
+
+Promise.all([
+    set(ref(db, "uwb"), uwbData),
+    set(ref(db, "uwbConfig"), uwbConfig)
+])
     .then(() => {
-        console.log("THÀNH CÔNG!");
-        console.log("Đã tạo đầy đủ key:");
-        console.log("   /uwb/anchors/A0 → A3");
-        console.log("   /uwb/tag/T0");
-        console.log("   /uwb/base/B0");
-        console.log("   /uwb/box/config\n");
-        console.log("BÂY GIỜ:");
-        console.log("   → Chạy: npm start");
-        console.log("   → Vào: https://console.firebase.google.com/project/dauwb-58554/database");
-        console.log("   → Sửa x, y, z → 3D cập nhật realtime!");
+        console.log("\n THÀNH CÔNG! ĐÃ TẠO:");
+        console.log("   /uwb              → phục vụ LiveTracking");
+        console.log("   /uwbConfig        → phục vụ SystemConfig UI");
+        console.log("\n Giờ bạn có thể chạy npm start và thấy dữ liệu load realtime.");
     })
-    .catch((error) => {
-        console.error("LỖI:", error.message);
-        console.error("\nKIỂM TRA:");
-        console.error("   1. Đã chạy: npm install firebase");
-        console.error("   2. Internet ổn định?");
-        console.error("   3. File này dùng import → project có \"type\": \"module\"");
-    });
+    .catch((err) => console.error("Lỗi:", err));

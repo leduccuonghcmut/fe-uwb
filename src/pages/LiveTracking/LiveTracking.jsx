@@ -8,7 +8,7 @@ export default function LiveTracking() {
         <div className={styles.container}>
             {/* Thanh tiêu đề giống mẫu */}
             <div className={styles.header}>
-                3D MAP
+                3D Live Tracking
             </div>
 
             {/* Legend nhỏ, responsive */}
@@ -22,22 +22,18 @@ export default function LiveTracking() {
                     Tag
                 </div>
                 <div className={styles.legendItem}>
-                    <span className={`${styles.dot} ${styles.yellow}`} />
-                    RTK Base
-                </div>
-                <div className={styles.legendItem}>
                     <span className={`${styles.dot} ${styles.line}`} />
                     Line UWB
                 </div>
                 <div className={styles.legendItem}>
                     <span className={`${styles.dot} ${styles.green}`} />
-                    Hộp 2×3×4 m (24 m³)
+                    Box
                 </div>
             </div>
 
             {/* Hướng dẫn phím góc phải dưới */}
             <div className={styles.controlsHelp}>
-                Chuột trái: xoay | Bánh xe: zoom | L: nhãn + đường | B: bật/tắt hộp
+                Left mouse: rotate | Right mouse: pan | Wheel: zoom | L: labels + paths | B: toggle box
             </div>
 
             {/* Vùng canvas 3D */}
