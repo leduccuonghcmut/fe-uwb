@@ -1,0 +1,514 @@
+/* PAGE */
+.page {
+    padding: 32px 40px;
+    background: linear-gradient(to bottom, #f9fafb, #f1f5f9);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* TOP ROW */
+.topRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+/* PILL BUTTONS */
+.switchGroup {
+    display: flex;
+    gap: 14px;
+}
+
+.pillBtn {
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: none;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.pillBtn:hover {
+    transform: translateY(-1px);
+}
+
+.pillActive {
+    background: linear-gradient(135deg, #0004fc, #2563eb);
+    color: white;
+    box-shadow: 0 5px 16px rgba(0,4,252,0.35);
+}
+
+.toggleDot {
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34,197,94,0.6);
+}
+
+/* MAIN CARD */
+.card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 16px 40px rgba(15,23,42,0.1);
+    padding: 28px;
+    border: 1px solid #f1f5f9;
+}
+
+.cardTopBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.cardTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.cardControls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.innerSearch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border-radius: 999px;
+    padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+    min-width: 240px;
+    transition: all 0.3s ease;
+}
+
+.innerSearch:focus-within {
+    border-color: #0004fc;
+    box-shadow: 0 0 0 3px rgba(0,4,252,0.15);
+}
+
+.innerSearch input {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+}
+
+.sortBy {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.sortBtn {
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    border: none;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+/* TABLE */
+.table {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.headerRow,
+.row {
+    display: grid;
+    grid-template-columns: 2.4fr 2fr 1.7fr 1.2fr;
+    padding: 14px 20px;
+    align-items: center;
+}
+
+.headerRow {
+    background: #f8fafc;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.row {
+    background: white;
+    font-size: 14px;
+    border-top: 1px solid #f3f4f6;
+    transition: background 0.2s ease;
+}
+
+.row:hover {
+    background: #f8faff;
+}
+
+.equipId {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.categoryCell select {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+}
+
+.categoryCell select:focus {
+    border-color: #0004fc;
+    box-shadow: 0 0 0 3px rgba(0,4,252,0.15);
+}
+
+.online { color: #16a34a; font-weight: 600; }
+.offline { color: #ef4444; font-weight: 600; }
+
+/* CARD FOOTER */
+.cardFooter {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 14px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.saveBtn {
+    padding: 12px 36px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #0004fc, #2563eb);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0,4,252,0.3);
+    transition: all 0.3s ease;
+}
+
+.saveBtn:hover {
+    transform: translateY(-2px);
+}
+
+/* FORBIDDEN CARD */
+.forbiddenCard {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 16px 40px rgba(15,23,42,0.1);
+    padding: 28px;
+    border: 1px solid #f1f5f9;
+}
+
+.forbiddenHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.forbiddenTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.forbiddenActions {
+    display: flex;
+    gap: 12px;
+}
+
+.addBtn, .clearAllBtn {
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.addBtn {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    box-shadow: 0 4px 12px rgba(34,197,94,0.3);
+}
+
+.clearAllBtn {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* ADD FORM */
+.addForm {
+    margin: 20px 0;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 1px dashed #cbd5e1;
+}
+
+.inputGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inputGroup label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.inputGroup input {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+}
+
+.confirmAddBtn {
+    padding: 10px 24px;
+    border-radius: 999px;
+    background: #0004fc;
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* BODY */
+.forbiddenBody {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 32px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.forbiddenRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: #f9fafb;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.forbiddenRow:hover {
+    background: #f0f5ff;
+}
+
+.coordText {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 14.5px;
+}
+
+.coordSize {
+    font-size: 13px;
+    color: #64748b;
+    margin-left: 12px;
+}
+
+.clearBtn {
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: #dc2626;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+}
+
+.forbiddenHint {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 13px;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .page { padding: 24px 24px; }
+    .inputGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+    .topRow { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .cardTopBar { flex-direction: column; gap: 16px; }
+    .cardControls { flex-direction: column; align-items: stretch; }
+    .innerSearch { min-width: auto; }
+    .inputGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Device List - Thoáng, đẹp, thêm trạng thái online/offline */
+.deviceList {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.deviceRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #f8fafc;
+    border-radius: 18px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.deviceRow:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Màu theo loại thiết bị */
+.deviceRow.tag {
+    border-color: #ff3b30;
+    background: #fff5f5;
+}
+
+.deviceRow.anchor {
+    border-color: #0066ff;
+    background: #f0f5ff;
+}
+
+.deviceRow.notselected {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+/* Thông tin thiết bị: tên + trạng thái */
+.deviceInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.deviceName {
+    font-weight: 600;
+    font-size: 16px;
+    color: #1e293b;
+}
+
+.statusBadge {
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.statusOnline {
+    color: #16a34a;
+}
+
+.statusOffline {
+    color: #64748b;
+}
+
+/* Dropdown chọn loại - đẹp và khớp màu nền */
+.typeSelect {
+    padding: 10px 16px;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    background: white;
+    font-size: 14.5px;
+    min-width: 150px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-weight: 500;
+}
+
+/* Màu viền dropdown theo loại (khi chọn) */
+.deviceRow.tag .typeSelect {
+    border-color: #ff3b30;
+}
+
+.deviceRow.anchor .typeSelect {
+    border-color: #0066ff;
+}
+
+.deviceRow.notselected .typeSelect {
+    border-color: #cbd5e1;
+}
+
+.typeSelect:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0, 4, 252, 0.2);
+}
+
+/* Nút trong card */
+.addBtn, .clearAllBtn, .confirmAddBtn {
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.addBtn {
+    background: #0004fc;
+    color: white;
+}
+
+.clearAllBtn {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.confirmAddBtn {
+    background: #0004fc;
+    color: white;
+}
