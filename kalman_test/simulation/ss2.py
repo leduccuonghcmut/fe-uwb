@@ -1,199 +1,225 @@
 import math
-import numpy as np
+import random
 import matplotlib.pyplot as plt
 
-from hybrid_scalable import Vec3, s_from_groundtruth, hybrid_solve_LM
+from hybrid_scalable import (
+    Vec3 as HVec3,
+    s_from_groundtruth,
+    hybrid_solve_LM,
+    dist,
+)
 
+from gmc_kalman_filter import (
+    Vec3 as KVec3,
+    AdaptiveGMCKalman3D,
+)
 
-SCENARIO_DUR_S = 10.0
+# ============================================================
+#  ONE FIGURE ONLY:
+#   - LOS (baseline)
+#   - NLOS (bias + noise increase in a window)
+#   - Missing anchors (LONGER burst drops + visible drift)
+#
+#  Make missing clearer by:
+#   1) Longer burst windows
+#   2) Predict-only during burst (no measurement update)
+#   3) Add maneuver bump ONLY during missing bursts => drift grows
+#   4) Plot Missing WITHOUT smoothing
+#   5) Mark dropped frames with "x" on the bottom
+# ============================================================
+
 DT = 0.1
-NUM_SCENARIOS = 6
-BASE_SEED = 20251221
+STEPS = 140               # 14s (longer to see effect)
+BASE_NOISE_STD = 0.07     # ~7 cm LOS
+SEED = 20251231
 
-ROOM_W = 12.0
-ROOM_H = 12.0
+# ---------------- NLOS configuration ----------------
+NLOS_START = 4.0
+NLOS_END   = 7.0
+NLOS_BIAS_M = 0.60
+NLOS_EXTRA_NOISE = 0.12
 
-# -----------------------------
-# SCALE LỖI VỀ MỨC 20–50 cm
-# Ví dụ lỗi solver 2–6 m -> 0.2–0.6 m
-# -----------------------------
- # bạn có thể chỉnh 0.08–0.12 tùy ý
+# s = [d2, d3, d4, d01, d02]
+# Apply NLOS on A2, A3 -> d3,d4 indices in s
+A2_A3_AFFECTED_S_IDXS = (1, 2)
 
+# ---------------- Missing anchors configuration ----------------
+# Make it MUCH clearer: longer drop windows
+MISSING_BURSTS = [
+    (1.8, 3.6),
+    (7.6, 9.6),
+    (10.6, 12.6),
+]
+DROP_PROB_RANDOM = 0.02   # tiny random loss (optional)
 
-def clamp(v, lo, hi):
-    return max(lo, min(hi, v))
+# ============================================================
+def to_kvec(v: HVec3) -> KVec3:
+    return KVec3(v.x, v.y, v.z)
 
+def to_hvec(v: KVec3) -> HVec3:
+    return HVec3(v.x, v.y, v.z)
 
-def anchors_for_scenario(idx: int):
-    if idx == 0:
-        return [
-            Vec3(0.0, 2.8, 0.0),
-            Vec3(12.0, 2.8, 0.0),
-            Vec3(0.0, 2.8, 12.0),
-            Vec3(12.0, 2.8, 12.0),
-        ]
-    if idx == 1:
-        return [
-            Vec3(1.0, 2.8, 1.0),
-            Vec3(11.0, 2.8, 1.0),
-            Vec3(1.0, 2.8, 11.0),
-            Vec3(11.0, 2.8, 11.0),
-        ]
-    if idx == 2:
-        return [
-            Vec3(0.0, 2.8, 0.0),
-            Vec3(12.0, 2.8, 0.0),
-            Vec3(0.0, 1.4, 12.0),
-            Vec3(12.0, 1.4, 12.0),
-        ]
-    if idx == 3:
-        return [
-            Vec3(0.0, 2.8, 0.0),
-            Vec3(12.0, 1.4, 0.0),
-            Vec3(0.0, 2.0, 12.0),
-            Vec3(12.0, 2.8, 12.0),
-        ]
-    if idx == 4:
-        return [
-            Vec3(0.0, 2.0, 0.0),
-            Vec3(4.0, 2.0, 0.0),
-            Vec3(8.0, 2.0, 0.0),
-            Vec3(12.0, 2.2, 2.0),
-        ]
+def smooth(y, k=4):
+    out = []
+    for i in range(len(y)):
+        l = max(0, i - k)
+        r = min(len(y), i + k + 1)
+        out.append(sum(y[l:r]) / (r - l))
+    return out
 
+def anchors_baseline():
     return [
-        Vec3(0.0, 2.0, 0.0),
-        Vec3(0.5, 2.0, 0.1),
-        Vec3(1.0, 2.0, 0.0),
-        Vec3(1.5, 2.1, 0.1),
+        HVec3(0.0, 0.0, 2.0),
+        HVec3(5.0, 0.0, 2.0),
+        HVec3(0.0, 5.0, 2.0),
+        HVec3(5.0, 5.0, 2.7),
     ]
 
+def bump(t, a, b, amp):
+    # Smooth 0->1->0 bump inside [a,b]
+    if t < a or t > b:
+        return 0.0
+    u = (t - a) / (b - a)
+    return amp * math.sin(math.pi * u)
 
-def tag_trajectory(seg_t: float, scenario_idx: int):
-    cx, cz = 6.0, 6.0
-    rx, rz = 2.5, 2.5
-    omega = (2.0 * math.pi) / SCENARIO_DUR_S
-    ang = omega * seg_t
+def gt_path(t: float) -> HVec3:
+    # Base smooth motion
+    cx, cy = 2.5, 2.5
+    r = 0.7
 
-    x = cx + rx * math.cos(ang)
-    z = cz + rz * math.sin(ang)
-    y = 1.6
+    x = cx + r * math.sin(0.55 * t)
+    y = cy + r * math.cos(0.48 * t)
+    z = 1.5 + 0.18 * math.sin(0.35 * t)
 
-    return Vec3(
-        clamp(x, 0.5, ROOM_W - 0.5),
-        clamp(y, 1.2, 2.2),
-        clamp(z, 0.5, ROOM_H - 0.5),
+    # Strong maneuver during missing bursts => predict-only drift grows clearly
+    for a, b in MISSING_BURSTS:
+        x += bump(t, a, b, amp=0.55)
+        y -= bump(t, a, b, amp=0.45)
+
+    return HVec3(x, y, z)
+
+def apply_nlos_to_s(s, bias_m: float, extra_noise_std: float):
+    s2 = list(s)
+    for idx in A2_A3_AFFECTED_S_IDXS:
+        s2[idx] += bias_m + random.gauss(0.0, extra_noise_std)
+    return s2
+
+def in_burst(t: float) -> bool:
+    for a, b in MISSING_BURSTS:
+        if a <= t <= b:
+            return True
+    return False
+
+def simulate(mode: str):
+    anchors = anchors_baseline()
+
+    kf = AdaptiveGMCKalman3D(
+        process_var=0.3,
+        meas_var=0.01,
+        alpha=1.0,
+        beta_init=1.0,
     )
 
+    # init from first frame (LOS init)
+    t0 = DT
+    gt0 = gt_path(t0)
+    s0 = s_from_groundtruth(anchors, gt0, BASE_NOISE_STD)
+    est0, _, _, _ = hybrid_solve_LM(anchors, s0)
+    kf.reset(to_kvec(est0))
 
-def pregen_noise(scenario_idx: int, n_steps: int, s_len: int):
-    rng = np.random.default_rng(np.random.SeedSequence([BASE_SEED, scenario_idx]))
-    base = rng.normal(0.0, 1.0, size=(n_steps, s_len))
-    w = rng.normal(0.0, 1.0, size=(n_steps, s_len))
-    h = rng.normal(0.0, 1.0, size=(n_steps, s_len))
-    return base, w, h
+    times, errs, drops = [], [], []
 
+    for step in range(1, STEPS + 1):
+        t = step * DT
+        gt = gt_path(t)
 
-def simulate_once(
-    scenario_idx: int,
-    mode: str,
-    wall_bias_m: float,
-    human_bias_m: float,
-    wall_scale: float,
-    human_scale: float,
-):
-    anchors = anchors_for_scenario(scenario_idx)
+        dropped = False
+        if mode == "MISSING":
+            dropped = in_burst(t) or (random.random() < DROP_PROB_RANDOM)
 
-    gt0 = tag_trajectory(0.0, scenario_idx)
-    s0_clean = s_from_groundtruth(anchors, gt0, noise_std_m=0.0)
-    s_len = len(s0_clean)
+        if dropped:
+            # predict-only (no update)
+            kf.predict(DT)
+            est_k = kf.get_state_vec3()
+            drops.append(True)
+        else:
+            s = s_from_groundtruth(anchors, gt, BASE_NOISE_STD)
 
-    tof_start = max(0, s_len - 2)
+            if mode == "NLOS" and (NLOS_START <= t <= NLOS_END):
+                s = apply_nlos_to_s(s, NLOS_BIAS_M, NLOS_EXTRA_NOISE)
 
-    n_steps = int(round(SCENARIO_DUR_S / DT)) + 1
-    base, n_wall, n_human = pregen_noise(scenario_idx, n_steps, s_len)
+            est_hyb, it, ok, cost = hybrid_solve_LM(anchors, s)
 
-    def make_meas(step_i: int, gt, s_clean):
-        # LOS: noise nhỏ
-        los = []
-        for i, v in enumerate(s_clean):
-            if i < tof_start:
-                los.append(float(v) + 0.02 * base[step_i, i])   # ~2 cm
-            else:
-                los.append(float(v) + 0.015 * base[step_i, i])  # ~1.5 cm
+            kf.predict(DT)
+            est_k = kf.update(
+                to_kvec(est_hyb),
+                hybrid_cost=cost,
+                hybrid_max_cost=2.0
+            )
+            drops.append(False)
 
-        if mode == "LOS":
-            return los
+        errs.append(dist(gt, to_hvec(est_k)))
+        times.append(t)
 
-        if mode == "WALL":
-            out = []
-            for i, v in enumerate(los):
-                if i < tof_start:
-                    out.append(float(v) + 0.03 * n_wall[step_i, i])   # ~3 cm
-                else:
-                    out.append(float(v) + wall_bias_m + wall_scale * n_wall[step_i, i])
-            return out
+    return times, errs, drops
 
-        # HUMAN
-        out = []
-        for i, v in enumerate(los):
-            if i < tof_start:
-                out.append(float(v) + 0.05 * n_human[step_i, i])      # ~5 cm
-            else:
-                out.append(float(v) + human_bias_m + human_scale * n_human[step_i, i])
-        return out
-
-    errors = []
-    t = 0.0
-    for k in range(n_steps):
-        gt = tag_trajectory(t, scenario_idx)
-        s_clean = s_from_groundtruth(anchors, gt, noise_std_m=0.0)
-        s_meas = make_meas(k, gt, s_clean)
-
-        est, _, ok, _ = hybrid_solve_LM(anchors, s_meas)
-        if ok:
-            e = math.dist((gt.x, gt.y, gt.z), (est.x, est.y, est.z))    # <<< scale về cm-level
-            errors.append(e)
-
-        t += DT
-
-    rms = math.sqrt(sum(e * e for e in errors) / len(errors))
-    return rms
-
+# ============================================================
 def run():
-    rms_los = []
-    rms_wall = []
-    rms_human = []
+    random.seed(SEED)
 
-    wall_bias = 0.10      # 10 cm trước khi scale
-    human_bias = 0.20     # 20 cm
-    wall_scale = 0.06
-    human_scale = 0.10
+    t_los, e_los, _ = simulate("LOS")
+    random.seed(SEED)
+    t_nls, e_nls, _ = simulate("NLOS")
+    random.seed(SEED)
+    t_mis, e_mis, d_mis = simulate("MISSING")
 
-    for sidx in range(NUM_SCENARIOS):
-        los_r = simulate_once(sidx, "LOS", wall_bias, human_bias, wall_scale, human_scale)
-        wall_r = simulate_once(sidx, "WALL", wall_bias, human_bias, wall_scale, human_scale)
-        human_r = simulate_once(sidx, "HUMAN", wall_bias, human_bias, wall_scale, human_scale)
+    mean_los, max_los = sum(e_los)/len(e_los), max(e_los)
+    mean_nls, max_nls = sum(e_nls)/len(e_nls), max(e_nls)
+    mean_mis, max_mis = sum(e_mis)/len(e_mis), max(e_mis)
 
-        rms_los.append(los_r)
-        rms_wall.append(wall_r)
-        rms_human.append(human_r)
+    miss_rate = sum(d_mis)/len(d_mis) * 100.0
 
-        print(f"S{sidx}: LOS={los_r:.3f} m | WALL={wall_r:.3f} m | HUMAN={human_r:.3f} m")
+    print("===== ONE-PLOT SUMMARY =====")
+    print(f"LOS     : mean={mean_los:.3f} m | max={max_los:.3f} m")
+    print(f"NLOS    : mean={mean_nls:.3f} m | max={max_nls:.3f} m | window=[{NLOS_START:.1f},{NLOS_END:.1f}]s")
+    print(f"MISSING : mean={mean_mis:.3f} m | max={max_mis:.3f} m | drop windows={len(MISSING_BURSTS)} (actual {miss_rate:.1f}%)")
 
-    labels = [f"S{i}" for i in range(NUM_SCENARIOS)]
-    x = np.arange(len(labels))
-    w = 0.27
+    ymax = max(max_los, max_nls, max_mis) * 1.15
+    ymax = max(ymax, 0.8)
 
-    plt.figure(figsize=(12, 6))
-    plt.bar(x - w, rms_los, w, label="LOS")
-    plt.bar(x, rms_wall, w, label="WALL")
-    plt.bar(x + w, rms_human, w, label="HUMAN")
-    plt.xticks(x, labels)
-    plt.ylabel("RMS Error (m)")
-    plt.title("RMS: LOS vs WALL vs HUMAN ")
-    plt.grid(axis="y")
+    plt.figure(figsize=(13, 6))
+    plt.title(
+        "UWB Error vs Time (LOS vs NLOS vs Missing Anchors)\n"
+        "Hybrid LM + Adaptive GMC–Kalman",
+        weight="bold"
+    )
+
+    # LOS/NLOS smoothed
+    plt.plot(t_los, smooth(e_los, k=4), linewidth=2.4, label=f"LOS (mean={mean_los:.3f}m)")
+    plt.plot(t_nls, smooth(e_nls, k=4), linewidth=2.4, label=f"NLOS (mean={mean_nls:.3f}m)")
+
+    # Missing NOT smoothed for clarity
+    plt.plot(t_mis, e_mis, linewidth=2.1, label=f"Missing (mean={mean_mis:.3f}m)")
+
+    # Shaded NLOS window
+    plt.axvspan(NLOS_START, NLOS_END, alpha=0.12, label="NLOS window")
+
+    # Shaded missing bursts
+    for i, (a, b) in enumerate(MISSING_BURSTS):
+        lbl = "Missing burst windows" if i == 0 else None
+        plt.axvspan(a, b, alpha=0.12, label=lbl)
+
+    # Mark dropped frames with x at bottom
+    drop_ts = [t for t, d in zip(t_mis, d_mis) if d]
+    if drop_ts:
+        plt.scatter(drop_ts, [0.02] * len(drop_ts), marker="x", s=28, label="Dropped frames (Missing)")
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Error (m)")
+    plt.ylim(0.0, ymax)
+    plt.grid(True, alpha=0.35)
     plt.legend()
+    plt.tight_layout()
     plt.show()
 
 
