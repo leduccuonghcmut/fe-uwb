@@ -1,0 +1,18 @@
+# IDEs và Tool
+.idea/
+*.iml
+vcs.xml
+modules.xml
+.vscode/
+
+# Dependencies (Tất cả node_modules trong các thư mục con)
+**/node_modules/
+package-lock.json
+
+# Python (cho kalman_test)
+**/__pycache__/
+*.py[cod]
+
+# Build folders
+**/dist/
+**/build/
