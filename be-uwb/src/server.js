@@ -25,41 +25,35 @@ let latestState = {
 };
 
 io.on("connection", (socket) => {
-    console.log(`Frontend connected: ${socket.id}`);
+    console.log(`Client connected: ${socket.id}`);
 
     // Gửi toàn bộ state ngay khi kết nối (tag + anchors)
     socket.emit("full-state-update", latestState);
 
-    socket.on("disconnect", () => {
-        console.log(`Frontend disconnected: ${socket.id}`);
+    // =========================================================
+    // 1. NHẬN VỊ TRÍ TAG TỪ PYTHON QUA SOCKET.IO (Tốc độ cao)
+    // =========================================================
+    socket.on("tag-update", (data) => {
+        if (data && typeof data.x === "number" && typeof data.z === "number") {
+            latestState.tag = {
+                x: data.x,
+                // Lấy Y từ Python, nếu không có thì set mặc định 1.6 làm chiều cao
+                y: data.y !== undefined ? data.y : 1.6,
+                z: data.z,
+                timestamp: Date.now() / 1000
+            };
+
+            // Gửi thẳng cho Frontend React/Three.js
+            io.emit("full-state-update", latestState);
+
+            // Comment log để tối ưu tốc độ, tránh thắt cổ chai I/O khi chạy thực tế
+            // console.log(`Tag → X=${latestState.tag.x.toFixed(3)} Y=${latestState.tag.y.toFixed(3)} Z=${latestState.tag.z.toFixed(3)}`);
+        }
     });
-});
 
-// HTTP push: nhận vị trí tag từ Python
-app.get("/push", (req, res) => {
-    const { x, y, z, ts } = req.query;
-
-    if (x === undefined || y === undefined || z === undefined) {
-        return res.status(400).send("Missing x, y, or z");
-    }
-
-    const tagData = {
-        x: parseFloat(x),
-        y: parseFloat(y), // Y = chiều cao
-        z: parseFloat(z),
-        timestamp: ts ? parseFloat(ts) : Date.now() / 1000,
-    };
-
-    latestState.tag = tagData;
-    io.emit("full-state-update", latestState);
-
-    console.log(`Tag → X=${tagData.x.toFixed(3)} Y=${tagData.y.toFixed(3)} Z=${tagData.z.toFixed(3)}`);
-
-    res.sendStatus(200);
-});
-
-// Socket.IO: nhận anchors drift từ Python
-io.on("connection", (socket) => {
+    // =========================================================
+    // 2. NHẬN ANCHORS DRIFT TỪ PYTHON QUA SOCKET.IO
+    // =========================================================
     socket.on("anchors-update", (anchorsData) => {
         if (anchorsData && typeof anchorsData === "object") {
             let updated = false;
@@ -78,17 +72,22 @@ io.on("connection", (socket) => {
             });
 
             if (updated) {
-                io.emit("full-state-update", latestState);
-                console.log("Anchors drift updated →", latestState.anchors);
+                //io.emit("full-state-update", latestState);
+                //console.log("Anchors drift updated →", latestState.anchors);
             }
         }
+    });
+
+    // Xử lý ngắt kết nối
+    socket.on("disconnect", () => {
+        console.log(`Client disconnected: ${socket.id}`);
     });
 });
 
 const PORT = 3000;
 server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`   • /push → tag position`);
-    console.log(`   • anchors-update → anchor drift`);
-    console.log(`   • Clients nhận: full-state-update`);
+    console.log(`   • Nhận Tag data    : Socket event "tag-update" (Siêu tốc)`);
+    console.log(`   • Nhận Anchor data : Socket event "anchors-update"`);
+    console.log(`   • Trả Frontend     : Socket event "full-state-update"`);
 });
