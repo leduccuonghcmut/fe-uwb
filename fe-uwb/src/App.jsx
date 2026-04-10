@@ -8,6 +8,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LiveTracking from "./pages/LiveTracking/LiveTracking";
 import Sidebar from "./components/Sidebar/Sidebar";
 import SystemConfig from "./pages/SystemConfig/SystemConfig";
+import AnchorSetup from "./pages/AnchorSetup/AnchorSetup";
 
 function App() {
     return (
@@ -86,6 +87,37 @@ function App() {
                                     }}
                                 >
                                     <LiveTracking />
+                                </div>
+                            </div>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* ANCHOR SETUP */}
+                <Route
+                    path="/anchor-setup"
+                    element={
+                        <ProtectedRoute>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    height: "100vh",
+                                    width: "100vw",
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <div style={{ flexShrink: 0 }}>
+                                    <Sidebar />
+                                </div>
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: "100vh",
+                                        overflowY: "auto",
+                                        background: "#f0f2f7",
+                                    }}
+                                >
+                                    <AnchorSetup />
                                 </div>
                             </div>
                         </ProtectedRoute>

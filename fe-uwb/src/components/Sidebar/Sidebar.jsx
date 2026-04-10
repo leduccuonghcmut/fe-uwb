@@ -52,6 +52,14 @@ export default function Sidebar() {
             <span>System Config</span>
           </a>
 
+          <a
+              className={styles.menuItem}
+              onClick={() => navigate("/anchor-setup")}
+          >
+            <i className="ri-router-line"></i>
+            <span>Anchor Setup</span>
+          </a>
+
           <a className={styles.menuItem}>
             <i className="ri-magic-line"></i>
             <span>Advance Feature</span>

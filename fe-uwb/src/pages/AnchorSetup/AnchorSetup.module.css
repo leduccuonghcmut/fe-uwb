@@ -1,0 +1,428 @@
+/* AnchorSetup.module.css */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+.page {
+    font-family: "Inter", sans-serif;
+    padding: 28px 32px;
+    background: #f0f2f7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    box-sizing: border-box;
+}
+
+/* ─── HEADER ─── */
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.titleGroup {}
+
+.title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1d23;
+    margin: 0 0 4px 0;
+}
+
+.subtitle {
+    font-size: 13.5px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.statusBadge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.online {
+    background: #dcfce7;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.offline {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ─── MAIN GRID ─── */
+.mainGrid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .mainGrid { grid-template-columns: 1fr; }
+}
+
+/* ─── PANELS ─── */
+.leftPanel,
+.rightPanel {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    border: 1px solid #e5e7eb;
+}
+
+.panelTitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 6px;
+}
+
+.panelTitleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.scanTime {
+    font-size: 11.5px;
+    color: #9ca3af;
+}
+
+.panelHint {
+    font-size: 12.5px;
+    color: #9ca3af;
+    margin: 0 0 18px 0;
+    line-height: 1.5;
+}
+
+/* ─── 4 SLOT CARDS ─── */
+.slotGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.slotCard {
+    position: relative;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.slotCard:hover {
+    border-color: #6366f1;
+    background: #eef2ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(99,102,241,0.15);
+}
+
+.slotActive {
+    border-color: #6366f1 !important;
+    background: linear-gradient(135deg, #eef2ff, #f0f9ff) !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.2), 0 4px 20px rgba(99,102,241,0.25) !important;
+}
+
+.slotLabel {
+    font-size: 22px;
+    font-weight: 800;
+    color: #6366f1;
+    line-height: 1;
+}
+
+.slotNumber {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.slotEmpty {
+    font-size: 12px;
+    color: #d1d5db;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+.slotAssigned {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.assignedName {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.assignedAddr {
+    font-size: 10.5px;
+    color: #6b7280;
+    font-family: monospace;
+}
+
+.assignedRssi {
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.slotPulse {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    border: 2px solid #6366f1;
+    animation: slotPulseAnim 1.2s ease-out infinite;
+    pointer-events: none;
+}
+
+@keyframes slotPulseAnim {
+    0%   { opacity: 1;   transform: scale(1); }
+    100% { opacity: 0;   transform: scale(1.06); }
+}
+
+.selectedInfo {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: #eef2ff;
+    border-radius: 10px;
+    border-left: 3px solid #6366f1;
+    font-size: 13.5px;
+    color: #3730a3;
+    line-height: 1.6;
+}
+
+.selectedHint {
+    font-size: 12px;
+    color: #6366f1;
+    opacity: 0.8;
+}
+
+/* ─── BLE DEVICE LIST ─── */
+.emptyBle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 10px;
+}
+
+.emptyIcon { font-size: 40px; opacity: 0.4; }
+.emptyText { font-size: 14px; color: #9ca3af; font-weight: 500; }
+.emptyHint { font-size: 12px; color: #c4c9d4; }
+.emptyHint code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    color: #6366f1;
+}
+
+.deviceList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.deviceList::-webkit-scrollbar { width: 4px; }
+.deviceList::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+
+.deviceCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.18s ease;
+    gap: 10px;
+}
+
+.deviceCard:hover {
+    border-color: #a5b4fc;
+    background: #f5f3ff;
+    transform: translateX(3px);
+}
+
+.deviceLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.deviceIcon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #818cf8, #6366f1);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.deviceInfo { min-width: 0; }
+
+.deviceName {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unknown { color: #9ca3af; font-style: italic; font-weight: 400; }
+
+.deviceAddr {
+    font-size: 11px;
+    color: #9ca3af;
+    font-family: monospace;
+    margin-top: 2px;
+}
+
+.deviceRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.rssiBar {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.rssiValue {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.rssiUnit {
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.rssiLabel {
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.assignBtn {
+    margin-top: 4px;
+    padding: 2px 8px;
+    background: #6366f1;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ─── LOG PANEL ─── */
+.logPanel {
+    background: #0f172a;
+    border-radius: 14px;
+    padding: 16px 20px;
+    border: 1px solid #1e293b;
+}
+
+.logTitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 12px;
+}
+
+.clearLog {
+    margin-left: auto;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.clearLog:hover { background: #334155; color: #e2e8f0; }
+
+.logContent {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 160px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.logContent::-webkit-scrollbar { width: 4px; }
+.logContent::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+.logEntry {
+    font-family: "Consolas", "Monaco", monospace;
+    font-size: 12px;
+    color: #7dd3fc;
+    padding: 2px 0;
+    border-bottom: 1px solid #1e293b;
+    white-space: nowrap;
+}
+
+.logEmpty {
+    font-size: 12px;
+    color: #475569;
+    font-style: italic;
+}

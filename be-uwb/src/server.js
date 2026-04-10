@@ -13,6 +13,23 @@ const io = new Server(server, {
     }
 });
 
+// =========================================================
+// HTTP ROUTE — fix "Cannot GET /"
+// =========================================================
+app.get("/", (req, res) => {
+    res.send(`
+        <h2>UWB Backend Server</h2>
+        <p>Socket.IO running on port 3000</p>
+        <ul>
+            <li><b>tag-update</b>: nhận vị trí TAG từ Python</li>
+            <li><b>anchors-update</b>: nhận drift anchor từ Python</li>
+            <li><b>ble-scan-result</b>: nhận danh sách BLE từ Raspberry Pi</li>
+            <li><b>anchor-select</b>: FE chọn slot anchor (1-4)</li>
+            <li><b>full-state-update</b>: broadcast tới FE</li>
+        </ul>
+    `);
+});
+
 // Trạng thái mới nhất – đúng trục: Y là chiều cao
 let latestState = {
     tag: { x: 6.0, y: 1.6, z: 6.0, timestamp: Date.now() / 1000 },
@@ -24,11 +41,17 @@ let latestState = {
     }
 };
 
+// Cache danh sách BLE mới nhất từ Raspberry Pi
+let latestBleList = [];
+
 io.on("connection", (socket) => {
     console.log(`Client connected: ${socket.id}`);
 
     // Gửi toàn bộ state ngay khi kết nối (tag + anchors)
     socket.emit("full-state-update", latestState);
+
+    // Gửi BLE list hiện tại ngay khi client kết nối
+    socket.emit("ble-scan-result", latestBleList);
 
     // =========================================================
     // 1. NHẬN VỊ TRÍ TAG TỪ PYTHON QUA SOCKET.IO (Tốc độ cao)
@@ -64,7 +87,7 @@ io.on("connection", (socket) => {
                     typeof anchorsData[key].z === "number") {
                     latestState.anchors[key] = {
                         x: anchorsData[key].x,
-                        y: anchorsData[key].y, // Y vẫn là chiều cao
+                        y: anchorsData[key].y,
                         z: anchorsData[key].z
                     };
                     updated = true;
@@ -73,8 +96,32 @@ io.on("connection", (socket) => {
 
             if (updated) {
                 //io.emit("full-state-update", latestState);
-                //console.log("Anchors drift updated →", latestState.anchors);
             }
+        }
+    });
+
+    // =========================================================
+    // 3. NHẬN KẾT QUẢ QUÉT BLE TỪ RASPBERRY PI
+    //    Python gửi: [{ name, address, rssi }, ...]
+    // =========================================================
+    socket.on("ble-scan-result", (deviceList) => {
+        if (Array.isArray(deviceList)) {
+            latestBleList = deviceList;
+            // Broadcast danh sách BLE cho tất cả FE clients
+            io.emit("ble-scan-result", latestBleList);
+            console.log(`[BLE] Received ${deviceList.length} devices from Raspberry Pi`);
+        }
+    });
+
+    // =========================================================
+    // 4. FE CHỌN SLOT ANCHOR (1-4) → RELAY XUỐNG PYTHON
+    //    FE gửi: { slot: 1 }  (slot 1 đến 4)
+    // =========================================================
+    socket.on("anchor-select", (data) => {
+        if (data && typeof data.slot === "number" && data.slot >= 1 && data.slot <= 4) {
+            console.log(`[SLOT] Web selected slot: ${data.slot}`);
+            // Broadcast cho tất cả client (kể cả Python đang lắng nghe)
+            io.emit("anchor-select", { slot: data.slot });
         }
     });
 
@@ -87,7 +134,9 @@ io.on("connection", (socket) => {
 const PORT = 3000;
 server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`   • Nhận Tag data    : Socket event "tag-update" (Siêu tốc)`);
-    console.log(`   • Nhận Anchor data : Socket event "anchors-update"`);
-    console.log(`   • Trả Frontend     : Socket event "full-state-update"`);
+    console.log(`   • Nhận Tag data       : Socket event "tag-update"`);
+    console.log(`   • Nhận Anchor data    : Socket event "anchors-update"`);
+    console.log(`   • Nhận BLE scan       : Socket event "ble-scan-result"`);
+    console.log(`   • Nhận slot select    : Socket event "anchor-select"`);
+    console.log(`   • Trả Frontend        : Socket event "full-state-update"`);
 });
