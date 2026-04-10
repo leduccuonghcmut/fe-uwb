@@ -27,9 +27,8 @@ async def main():
     global loop
     loop = asyncio.get_running_loop()
 
-    # Chỉ in thông tin khởi động tối thiểu
     print("Dang quet UWB/BLE va gui du lieu len server...")
-    print("Su dung Payload rut gon (11 Bytes).")
+    print("He thong BLE 2D (11 Bytes) -> Server Socket 3D (Z=0.0).")
     print("Bam Ctrl+C de dung.\n")
 
     try:
@@ -54,17 +53,26 @@ def detection_callback(device, advertisement_data):
     for company_id, data in advertisement_data.manufacturer_data.items():
 
         # ==================== TAG ====================
-        if len(data) == 11 and data[0] == 123:  # '{'
+        # Đổi thành 11 bytes (2D)
+        if len(data) == 11 and data[0] == 123:
             try:
-                unpacked = struct.unpack('<c B B f f', data)
-
+                # Unpack 3 byte uint8 và 2 float
+                unpacked = struct.unpack('<BBBff', data)
+                
+                tid = unpacked[1]
+                seq = unpacked[2]
                 x = round(unpacked[3], 2)
                 y = round(unpacked[4], 2)
+                z = 0.0 # Bù thêm z = 0 để đẩy lên Socket.IO như cũ
+
+                # ✅ LOG NGẮN TAG
+                print(f"TAG  id={tid} seq={seq} -> (x={x} y={z} z={y})")
 
                 async def send_tag():
                     if sio.connected:
                         try:
-                            await sio.emit("tag-update", {"x": x, "y": 1.6, "z": y})
+                            # GIỮ NGUYÊN CÁCH GỬI DỮ LIỆU CŨ
+                            await sio.emit("tag-update", {"id": tid, "x": x, "y": z, "z": y})
                         except:
                             pass
 
@@ -75,22 +83,32 @@ def detection_callback(device, advertisement_data):
                 print("Loi unpack Tag:", e)
 
         # ==================== ANCHOR ====================
-        elif len(data) == 11 and data[0] == 91:  # '['
+        # Đổi thành 11 bytes (2D)
+        elif len(data) == 11 and data[0] == 91:
             try:
-                unpacked = struct.unpack('<c B B f f', data)
+                # Unpack 3 byte uint8 và 2 float
+                unpacked = struct.unpack('<BBBff', data)
+                
                 aid = unpacked[1]
+                seq = unpacked[2]
                 ax = round(unpacked[3], 2)
                 ay = round(unpacked[4], 2)
+                az = 0.0 # Bù thêm az = 0
 
                 anchor_key = f"A{aid}"
+                # GIỮ NGUYÊN CÁCH ĐÓNG GÓI DICT CŨ (gồm cả thao tác swap y và z)
+                anchors_state[anchor_key] = {"x": ax, "y": az, "z": ay}
 
-                anchors_state[anchor_key] = {"x": ax, "y": 2.0, "z": ay}
+                # ✅ LOG NGẮN ANCHOR
+                print(f"ANCHOR {anchor_key} seq={seq} -> (x={ax} y={az} z={ay})")
 
                 current_time = time.time()
                 if current_time - last_anchor_send_time > 1.0:
+
                     async def send_anchors():
                         if sio.connected and anchors_state:
                             try:
+                                # GIỮ NGUYÊN CÁCH GỬI DỮ LIỆU CŨ
                                 await sio.emit("anchors-update", anchors_state.copy())
                             except:
                                 pass
@@ -108,6 +126,6 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        pass  # Không in thông báo dừng
+        pass
     except Exception as e:
         print("Loi:", e)
