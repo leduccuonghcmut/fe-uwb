@@ -79,11 +79,14 @@ export default function SystemConfig() {
         setIsCalibrating(true);
         const calibRef = ref(rtdb, "uwb/commands/calibrate");
         set(calibRef, {
-            mac: "FFFF", role: 99, id: 0, timestamp: Date.now()
+            mac: "FFFF",
+            role: 99,
+            id: 0,
+            timestamp: Date.now()
         });
 
+        // Tự động đóng modal sau 1.8 giây
         setTimeout(() => {
-            alert("Đã gửi lệnh Auto Calibration (Role 99, ID 0) xuống thiết bị!");
             setIsCalibrating(false);
             setShowCalibModal(false);
         }, 1800);
@@ -106,12 +109,19 @@ export default function SystemConfig() {
         <>
             <Header />
             <div className={styles.page}>
-                <div className={styles.topRow}><h4 className={styles.title}>System Configuration</h4></div>
+                <div className={styles.topRow}>
+                    <h4 className={styles.title}>System Configuration</h4>
+                </div>
 
                 <div className={styles.card}>
                     <div className={styles.cardTopBar}>
                         <div className={styles.cardTitle}>Device Configuration</div>
-                        <button className={styles.autoCalibBtn} onClick={() => setShowCalibModal(true)}>🔧 Auto Calibration</button>
+                        <button
+                            className={styles.autoCalibBtn}
+                            onClick={() => setShowCalibModal(true)}
+                        >
+                            🔧 Auto Calibration
+                        </button>
                     </div>
 
                     <div className={styles.deviceList}>
@@ -144,14 +154,18 @@ export default function SystemConfig() {
                     </div>
                 </div>
 
+                {/* ==================== FORBIDDEN ZONES CARD (giữ nguyên) ==================== */}
                 <div className={styles.card}>
                     <div className={styles.cardTopBar}>
                         <div className={styles.cardTitle}>Forbidden Zones Management</div>
                         <div className={styles.cardControls}>
-                            <button className={styles.addBtn} onClick={() => setShowAddForm(!showAddForm)}>{showAddForm ? "Cancel" : "+ Add New Zone"}</button>
+                            <button className={styles.addBtn} onClick={() => setShowAddForm(!showAddForm)}>
+                                {showAddForm ? "Cancel" : "+ Add New Zone"}
+                            </button>
                             {zones.length > 0 && <button className={styles.clearAllBtn} onClick={clearAllZones}>Clear All</button>}
                         </div>
                     </div>
+
                     {showAddForm && (
                         <div className={styles.addForm}>
                             <div className={styles.inputGrid}>
@@ -183,6 +197,37 @@ export default function SystemConfig() {
                     </div>
                 </div>
             </div>
+
+            {/* ==================== MODAL AUTO CALIBRATION ==================== */}
+            {showCalibModal && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalContent}>
+                        <h3>🔧 Auto Calibration</h3>
+                        <p>
+                            Gửi lệnh tự động hiệu chỉnh (Role 99, ID 0) cho toàn bộ hệ thống UWB.<br />
+                            Thiết bị sẽ tự recalibrate vị trí anchors.
+                        </p>
+                        <div className={styles.modalButtons}>
+                            <button
+                                className={styles.cancelBtn}
+                                onClick={() => {
+                                    setShowCalibModal(false);
+                                    setIsCalibrating(false);
+                                }}
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                className={styles.confirmBtn}
+                                disabled={isCalibrating}
+                                onClick={startAutoCalibration}
+                            >
+                                {isCalibrating ? "Đang gửi lệnh..." : "Xác nhận gửi"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
