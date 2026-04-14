@@ -2,92 +2,142 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const admin = require("firebase-admin");
+
+// =========================================================
+// 1. KHỞI TẠO FIREBASE ADMIN
+// =========================================================
+const serviceAccount = require("./serviceAccountKey.json");
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    // ⚠️ LƯU Ý: Đảm bảo URL này phải khớp 100% với Firebase Console của bạn
+    databaseURL: "https://dauwb-58554-default-rtdb.asia-southeast1.firebasedatabase.app"
+});
+const db = admin.database();
 
 const app = express();
 const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
 
-const io = new Server(server, {
-    cors: {
-        origin: "*", // Dev mode
-        methods: ["GET", "POST"]
+// Hiển thị trạng thái kết nối Database để dễ debug
+db.ref(".info/connected").on("value", (snap) => {
+    if (snap.val() === true) {
+        console.log("✅ [FIREBASE] ĐÃ KẾT NỐI THÀNH CÔNG ĐẾN DATABASE!");
     }
 });
 
-// Trạng thái mới nhất – đúng trục: Y là chiều cao
 let latestState = {
     tag: { x: 6.0, y: 1.6, z: 6.0, timestamp: Date.now() / 1000 },
     anchors: {
-        A0: { x: 0.0,  y: 2.0, z: 0.0 },
-        A1: { x: 12.0, y: 2.0, z: 0.0 },
-        A2: { x: 0.0,  y: 2.0, z: 12.0 },
-        A3: { x: 12.0, y: 2.0, z: 12.0 }
+        A0: { x: 0.0, y: 2.0, z: 0.0 }, A1: { x: 12.0, y: 2.0, z: 0.0 },
+        A2: { x: 0.0, y: 2.0, z: 12.0 }, A3: { x: 12.0, y: 2.0, z: 12.0 }
     }
 };
 
-io.on("connection", (socket) => {
-    console.log(`Client connected: ${socket.id}`);
+// Bộ nhớ đệm chống Spam từ Pi (chỉ ghi DB 3 giây 1 lần cho mỗi MAC)
+let deviceCache = {};
 
-    // Gửi toàn bộ state ngay khi kết nối (tag + anchors)
+io.on("connection", (socket) => {
+    console.log(`[SOCKET] Client connected: ${socket.id}`);
     socket.emit("full-state-update", latestState);
 
     // =========================================================
-    // 1. NHẬN VỊ TRÍ TAG TỪ PYTHON QUA SOCKET.IO (Tốc độ cao)
+    // 2. NHẬN LỆNH TỪ PI -> LỌC SPAM -> LƯU VÀO DATABASE
     // =========================================================
+    socket.on("new-device", (data) => {
+        if (!data || !data.mac) return;
+
+        const now = Date.now();
+        // CHỐNG SPAM: Nếu MAC này vừa được ghi trong vòng 3 giây trước, bỏ qua lệnh này
+        if (deviceCache[data.mac] && (now - deviceCache[data.mac]) < 3000) {
+            return;
+        }
+        deviceCache[data.mac] = now; // Cập nhật thời gian ghi gần nhất
+
+        console.log(`[SOCKET] Nhan thiet bi PENDING: MAC=${data.mac} -> Dang luu vao DB...`);
+
+        const deviceRef = db.ref(`uwb/devices/${data.mac}`);
+
+        // Dùng .update() để ghi đè hoặc tạo mới mà không bị chặn tiến trình
+        deviceRef.update({
+            status: "online",
+            type: "Pending", // Mặc định là thiết bị chờ cấp quyền
+            role: data.role !== undefined ? data.role : 0,
+            node_id: data.id !== undefined ? data.id : 0,
+            last_seen: now,
+            config_trigger: now // Tạo trigger mặc định
+        }).then(() => {
+            console.log(`[FIREBASE] 💾 Đã lưu thành công thiết bị MAC: ${data.mac}`);
+        }).catch((err) => {
+            console.error(`[FIREBASE] ❌ Lỗi khi ghi MAC ${data.mac}:`, err);
+        });
+    });
+
+    // Tracking siêu tốc (Tag & Anchor)
     socket.on("tag-update", (data) => {
         if (data && typeof data.x === "number" && typeof data.z === "number") {
-            latestState.tag = {
-                x: data.x,
-                // Lấy Y từ Python, nếu không có thì set mặc định 1.6 làm chiều cao
-                y: data.y !== undefined ? data.y : 1.6,
-                z: data.z,
-                timestamp: Date.now() / 1000
-            };
-
-            // Gửi thẳng cho Frontend React/Three.js
+            latestState.tag = { x: data.x, y: data.y !== undefined ? data.y : 1.6, z: data.z, timestamp: Date.now() / 1000 };
             io.emit("full-state-update", latestState);
-
-            // Comment log để tối ưu tốc độ, tránh thắt cổ chai I/O khi chạy thực tế
-            // console.log(`Tag → X=${latestState.tag.x.toFixed(3)} Y=${latestState.tag.y.toFixed(3)} Z=${latestState.tag.z.toFixed(3)}`);
         }
     });
 
-    // =========================================================
-    // 2. NHẬN ANCHORS DRIFT TỪ PYTHON QUA SOCKET.IO
-    // =========================================================
     socket.on("anchors-update", (anchorsData) => {
-        if (anchorsData && typeof anchorsData === "object") {
-            let updated = false;
+        if (anchorsData) {
             ["A0", "A1", "A2", "A3"].forEach(key => {
-                if (anchorsData[key] &&
-                    typeof anchorsData[key].x === "number" &&
-                    typeof anchorsData[key].y === "number" &&
-                    typeof anchorsData[key].z === "number") {
-                    latestState.anchors[key] = {
-                        x: anchorsData[key].x,
-                        y: anchorsData[key].y, // Y vẫn là chiều cao
-                        z: anchorsData[key].z
-                    };
-                    updated = true;
+                if (anchorsData[key] && typeof anchorsData[key].x === "number") {
+                    latestState.anchors[key] = { x: anchorsData[key].x, y: anchorsData[key].y, z: anchorsData[key].z };
                 }
             });
-
-            if (updated) {
-                //io.emit("full-state-update", latestState);
-                //console.log("Anchors drift updated →", latestState.anchors);
-            }
         }
     });
 
-    // Xử lý ngắt kết nối
-    socket.on("disconnect", () => {
-        console.log(`Client disconnected: ${socket.id}`);
-    });
+    socket.on("disconnect", () => console.log(`[SOCKET] Client disconnected: ${socket.id}`));
+});
+
+// =========================================================
+// 3. LẮNG NGHE WEB ĐỔI ROLE -> BẮN LỆNH XUỐNG PYTHON
+// =========================================================
+let lastTriggers = {};
+
+db.ref("uwb/devices").on("child_changed", (snapshot) => {
+    const deviceData = snapshot.val();
+    const mac = snapshot.key;
+
+    // Chỉ gửi lệnh xuống mạch khi bạn THỰC SỰ chọn thay đổi trên Web
+    if (deviceData.config_trigger && deviceData.config_trigger !== lastTriggers[mac]) {
+        // Tránh lệnh lặp nếu vừa mới update lúc tạo Pending
+        if (Math.abs(deviceData.config_trigger - deviceData.last_seen) > 1000) {
+            lastTriggers[mac] = deviceData.config_trigger;
+            console.log(`[FIREBASE -> PI] 🚀 Phat lenh cau hinh cho MAC ${mac} -> Role: ${deviceData.role}, ID: ${deviceData.node_id}`);
+
+            io.emit("set-device-role", {
+                mac: mac,
+                role: deviceData.role,
+                id: deviceData.node_id
+            });
+        }
+    }
+});
+
+// Lệnh Auto Calibration
+let lastCalibTime = 0;
+db.ref("uwb/commands/calibrate").on("value", (snapshot) => {
+    const calibData = snapshot.val();
+    if (calibData && calibData.timestamp && calibData.timestamp !== lastCalibTime) {
+        lastCalibTime = calibData.timestamp;
+        console.log(`[FIREBASE -> PI] 🔧 Phat lenh AUTO CALIB (Role: ${calibData.role}, ID: ${calibData.id})`);
+
+        io.emit("set-device-role", {
+            mac: calibData.mac || "FFFF",
+            role: calibData.role,
+            id: calibData.id
+        });
+    }
 });
 
 const PORT = 3000;
 server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`   • Nhận Tag data    : Socket event "tag-update" (Siêu tốc)`);
-    console.log(`   • Nhận Anchor data : Socket event "anchors-update"`);
-    console.log(`   • Trả Frontend     : Socket event "full-state-update"`);
+    console.log(`BỘ LỌC CHỐNG SPAM: ĐÃ BẬT (3 giây/lệnh)`);
 });

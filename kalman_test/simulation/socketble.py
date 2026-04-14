@@ -13,7 +13,7 @@ last_anchor_send_time = 0
 
 @sio.event
 async def connect():
-    pass  # Không in log khi kết nối
+    pass  
 
 @sio.event
 async def connect_error(data):
@@ -21,7 +21,7 @@ async def connect_error(data):
 
 @sio.event
 async def disconnect():
-    pass  # Không in log khi ngắt kết nối
+    pass  
 
 async def main():
     global loop
@@ -51,27 +51,49 @@ def detection_callback(device, advertisement_data):
     global loop, anchors_state, last_anchor_send_time
 
     for company_id, data in advertisement_data.manufacturer_data.items():
+        
+        # ==================== PENDING DEVICE (ROLE = 0) ====================
+        if len(data) == 3 and data[0] == 85:
+            try:
+                # Phục hồi giá trị MAC (dạng số nguyên)
+                mac_val = data[1] | (data[2] << 8)
+                
+                # Ép kiểu format thành chuỗi Hex (4 ký tự, in hoa) để giống với C (%04X)
+                mac_hex = f"{mac_val:04X}"
+                
+                dev_info = {"mac": mac_hex, "role": 0, "id": 0}
+                
+                print(f"[NEW DEVICE PENDING] MAC: {mac_hex} | Role: 0 | ID: 0")
+                
+                async def send_new_device():
+                    if sio.connected:
+                        try:
+                            await sio.emit("new-device", dev_info)
+                        except:
+                            pass
+                
+                if loop:
+                    loop.create_task(send_new_device())
+                continue 
+            except Exception as e:
+                print("Loi unpack Pending Device:", e)
 
         # ==================== TAG ====================
-        # Đổi thành 11 bytes (2D)
-        if len(data) == 11 and data[0] == 123:
+        elif len(data) == 11 and data[0] == 123:
             try:
-                # Unpack 3 byte uint8 và 2 float
                 unpacked = struct.unpack('<BBBff', data)
                 
                 tid = unpacked[1]
                 seq = unpacked[2]
                 x = round(unpacked[3], 2)
                 y = round(unpacked[4], 2)
-                z = 0.0 # Bù thêm z = 0 để đẩy lên Socket.IO như cũ
+                z = 0.0
 
-                # ✅ LOG NGẮN TAG
                 print(f"TAG  id={tid} seq={seq} -> (x={x} y={z} z={y})")
 
                 async def send_tag():
                     if sio.connected:
                         try:
-                            # GIỮ NGUYÊN CÁCH GỬI DỮ LIỆU CŨ
                             await sio.emit("tag-update", {"id": tid, "x": x, "y": z, "z": y})
                         except:
                             pass
@@ -83,23 +105,19 @@ def detection_callback(device, advertisement_data):
                 print("Loi unpack Tag:", e)
 
         # ==================== ANCHOR ====================
-        # Đổi thành 11 bytes (2D)
         elif len(data) == 11 and data[0] == 91:
             try:
-                # Unpack 3 byte uint8 và 2 float
                 unpacked = struct.unpack('<BBBff', data)
                 
                 aid = unpacked[1]
                 seq = unpacked[2]
                 ax = round(unpacked[3], 2)
                 ay = round(unpacked[4], 2)
-                az = 0.0 # Bù thêm az = 0
+                az = 0.0
 
                 anchor_key = f"A{aid}"
-                # GIỮ NGUYÊN CÁCH ĐÓNG GÓI DICT CŨ (gồm cả thao tác swap y và z)
                 anchors_state[anchor_key] = {"x": ax, "y": az, "z": ay}
 
-                # ✅ LOG NGẮN ANCHOR
                 print(f"ANCHOR {anchor_key} seq={seq} -> (x={ax} y={az} z={ay})")
 
                 current_time = time.time()
@@ -108,7 +126,6 @@ def detection_callback(device, advertisement_data):
                     async def send_anchors():
                         if sio.connected and anchors_state:
                             try:
-                                # GIỮ NGUYÊN CÁCH GỬI DỮ LIỆU CŨ
                                 await sio.emit("anchors-update", anchors_state.copy())
                             except:
                                 pass

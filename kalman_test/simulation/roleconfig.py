@@ -8,8 +8,8 @@ from winsdk.windows.devices.bluetooth.advertisement import (
 from winsdk.windows.storage.streams import DataWriter
 
 async def send_ble_windows():
-    mac_hex = "8606"
-    role = 99
+    mac_hex = "2323"
+    role = 2
     node_id = 0
     mac_int = int(mac_hex, 16)
     # '<BHBB' nghĩa là: L-Endian, 1 byte, 2 byte, 1 byte, 1 byte
