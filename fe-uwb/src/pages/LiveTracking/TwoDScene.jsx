@@ -29,7 +29,7 @@ export default function TwoDScene() {
     const [currentRoom, setCurrentRoom] = useState("");
 
     const [anchors, setAnchors] = useState({});
-    const [tags, setTags] = useState({}); // Lấy từ Firebase, không khởi tạo cứng
+    const [tags, setTags] = useState({});
     const [forbiddenZones, setForbiddenZones] = useState([]);
 
     const [scale, setScale] = useState(() => parseInt(localStorage.getItem("twoD_scale")) || BASE_SCALE);
@@ -124,14 +124,30 @@ export default function TwoDScene() {
         return () => window.removeEventListener("resize", updateSize);
     }, []);
 
+    // ĐÃ SỬA LỖI NHẬN SOCKET Ở ĐÂY
     useEffect(() => {
         const socket = io("http://localhost:3000", { transports: ["websocket"], reconnection: true });
         socketRef.current = socket;
 
-        // Nhận dữ liệu cập nhật tọa độ real-time từ server
         socket.on("full-state-update", (state) => {
-            if (state.tags && !isDraggingTagRef.current) {
-                setTags(prev => ({ ...prev, ...state.tags }));
+            if (!isDraggingTagRef.current) {
+                // Nếu server gửi dạng danh sách tags (multi-tag)
+                if (state.tags) {
+                    setTags(prev => ({ ...prev, ...state.tags }));
+                }
+                // Nếu server gửi dạng 1 tag (single-tag như file server.js hiện tại)
+                if (state.tag) {
+                    setTags(prev => {
+                        const tagId = state.tag.id ? `T${state.tag.id}` : "T1";
+                        return {
+                            ...prev,
+                            [tagId]: {
+                                x: state.tag.x,
+                                y: state.tag.y !== undefined ? state.tag.y : state.tag.z
+                            }
+                        };
+                    });
+                }
             }
         });
 
@@ -163,11 +179,10 @@ export default function TwoDScene() {
 
         const roomPath = `uwb/rooms/${currentRoom}`;
 
-        // Load Tags đã lưu (Để không bị mất khi reload web)
         const unsubTags = onValue(ref(rtdb, `${roomPath}/tags`), (snap) => {
             const data = snap.val() || {};
             if (!isDraggingTagRef.current) {
-                setTags(data);
+                setTags(prev => ({ ...prev, ...data }));
             }
         });
 
@@ -208,7 +223,6 @@ export default function TwoDScene() {
             }
         });
 
-        // Đã sửa lỗi đường dẫn: Vùng cấm nằm ở root uwb/forbidden/zones
         const unsubZones = onValue(ref(rtdb, `uwb/forbidden/zones`), (snap) => {
             const data = snap.val();
             const zonesList = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
@@ -278,7 +292,6 @@ export default function TwoDScene() {
         });
         setAnchors(updatedAnchors);
 
-        // Update tags ratio
         const newTags = {};
         Object.keys(tags).forEach(id => {
             newTags[id] = { x: tags[id].x * ratio, y: tags[id].y * ratio };
@@ -341,7 +354,6 @@ export default function TwoDScene() {
         }
     };
 
-    // Hàm thêm Tag mới và LƯU TRỰC TIẾP LÊN FIREBASE
     const addNewTag = () => {
         const ids = Object.keys(tags).map(k => parseInt(k.replace(/\D/g, '')) || 0);
         const maxId = ids.length ? Math.max(...ids) : 0;
@@ -635,7 +647,6 @@ export default function TwoDScene() {
 
                         {renderGrid()}
 
-                        {/* ================= MAP VÙNG CẤM ================= */}
                         {showForbidden && forbiddenZones.map(zone => {
                             const physX = zone.x || 0;
                             const physY = zone.z || 0;
@@ -672,7 +683,6 @@ export default function TwoDScene() {
                             {showLabels && <Text x={14} y={-20} text="(0,0)" fontSize={13} fill="#ef4444" fontStyle="bold" listening={false} />}
                         </Group>
 
-                        {/* Tia Laser kết nối cho tất cả các Tags */}
                         {Object.entries(tags).map(([tagId, tagPos]) => {
                             const screenTag = toScreen(tagPos.x, tagPos.y);
                             return Object.entries(anchors).map(([id, pos]) => {
@@ -728,7 +738,6 @@ export default function TwoDScene() {
                             );
                         })}
 
-                        {/* Hiển thị đa mảng Tags kèm tính năng Bấm Xóa */}
                         {Object.entries(tags).map(([tagId, tagPos]) => (
                             <Group
                                 key={tagId}
@@ -742,9 +751,7 @@ export default function TwoDScene() {
                                     const newX = phys.x;
                                     const newY = phys.y;
 
-                                    // Lưu vị trí sau khi kéo lên Firebase
                                     set(ref(rtdb, `uwb/rooms/${currentRoom}/tags/${tagId}`), { x: newX, y: newY });
-
                                     e.target.position(toScreen(newX, newY));
 
                                     if (socketRef.current) {
@@ -767,7 +774,7 @@ export default function TwoDScene() {
                                 {showLabels && (
                                     <>
                                         <Text x={20} y={-12} text={tagId} fontSize={14} fill="#ff5500" fontStyle="bold" listening={false} />
-                                        <Text x={20} y={6} text={`(${tagPos.x.toFixed(2)}, ${tagPos.y.toFixed(2)})`} fontSize={10.5} fill="#64748b" listening={false} />
+                                        <Text x={20} y={6} text={`(${tagPos.x?.toFixed(2)}, ${tagPos.y?.toFixed(2)})`} fontSize={10.5} fill="#64748b" listening={false} />
                                     </>
                                 )}
                             </Group>

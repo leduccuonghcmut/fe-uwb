@@ -173,8 +173,9 @@ export default function ThreeScene() {
                     const data = aSnap.val() || {};
                     Object.keys(data).forEach(id => {
                         if (!anchors3D[id]) anchors3D[id] = createAnchor(id, data[id].color || "#0066ff");
-                        // CHÚ Ý: Đổi hệ tọa độ! 2D.y -> 3D.z. Chiều cao Y cố định là 1.0 cho Anchor
-                        anchors3D[id].mesh.position.set(data[id].x || 0, 1.0, data[id].y || 0);
+                        const ax = data[id].x !== undefined ? data[id].x : 0;
+                        const az = data[id].y !== undefined ? data[id].y : 0;
+                        anchors3D[id].mesh.position.set(ax, 1.0, az);
                     });
                     Object.keys(anchors3D).forEach(id => {
                         if (!data[id]) {
@@ -190,8 +191,9 @@ export default function ThreeScene() {
                     const data = tSnap.val() || {};
                     Object.keys(data).forEach(id => {
                         if (!tags3D[id]) tags3D[id] = createTag(id, "#ff3b30");
-                        // CHÚ Ý: Đổi hệ tọa độ! 2D.y -> 3D.z. Chiều cao Y cố định là 0.2 cho Tag (bám sát mặt đất)
-                        tags3D[id].mesh.position.set(data[id].x || 0, 0.2, data[id].y || 0);
+                        const tx = data[id].x !== undefined ? data[id].x : 0;
+                        const tz = data[id].y !== undefined ? data[id].y : 0;
+                        tags3D[id].mesh.position.set(tx, 0.2, tz);
                     });
                     Object.keys(tags3D).forEach(id => {
                         if (!data[id]) {
@@ -203,17 +205,33 @@ export default function ThreeScene() {
             }
         });
 
-        // 5. Cập nhật vị trí Tags theo Real-time Socket (Đè lên Firebase data nếu có)
+        // 5. Cập nhật vị trí Tags theo Real-time Socket (CHỈNH SỬA Ở ĐÂY)
         if (socket) {
             socket.on("full-state-update", (state) => {
+                // Xử lý khi server gửi dạng danh sách (multi-tag)
                 if (state.tags) {
                     Object.keys(state.tags).forEach(id => {
-                        if (tags3D[id]) {
-                            const t = state.tags[id];
-                            // Cập nhật mượt mà, vẫn quy tắc: 2D.y -> 3D.z
-                            tags3D[id].mesh.position.set(t.x || 0, 0.2, t.y || 0);
-                        }
+                        if (!tags3D[id]) tags3D[id] = createTag(id, "#ff3b30");
+                        const t = state.tags[id];
+                        const posX = t.x !== undefined ? t.x : 0;
+                        // Lưu ý: 2D dùng trục y, 3D dùng trục z làm mặt phẳng sàn
+                        const posZ = t.y !== undefined ? t.y : (t.z || 0);
+                        tags3D[id].mesh.position.set(posX, 0.2, posZ);
                     });
+                }
+
+                // Xử lý khi server gửi dạng 1 tag (single-tag từ Pi)
+                if (state.tag) {
+                    const tagId = state.tag.id ? `T${state.tag.id}` : "T1";
+
+                    // Nếu Tag chưa từng được vẽ, tạo mới ngay lập tức
+                    if (!tags3D[tagId]) tags3D[tagId] = createTag(tagId, "#ff3b30");
+
+                    const posX = state.tag.x !== undefined ? state.tag.x : 0;
+                    const posZ = state.tag.y !== undefined ? state.tag.y : (state.tag.z || 0);
+
+                    // Cập nhật vị trí mượt mà, hỗ trợ tốt số âm
+                    tags3D[tagId].mesh.position.set(posX, 0.2, posZ);
                 }
             });
         }
