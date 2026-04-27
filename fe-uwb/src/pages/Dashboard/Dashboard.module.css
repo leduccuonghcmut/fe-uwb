@@ -1,27 +1,34 @@
 .wrapper {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(180deg, #f6f9fb 0%, #e9eff2 45%, #d8e1e6 100%);
-  overflow-y: auto; /* ⭐ Sửa: Cho phép scroll dọc toàn trang */
+  /* Nền tinh tế kiểu mặt trời sáng - ấm (sunrise style) */
+  background: linear-gradient(135deg,
+  #f8e3d3 0%,      /* hồng nhạt ấm */
+  #f9d8b8 15%,
+  #ffe4c4 30%,
+  #c0e0ff 55%,     /* chuyển xanh dương nhạt */
+  #a8d1ff 75%,
+  #e0f0ff 100%);   /* sáng dịu */
+  overflow-y: auto;
 }
 
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh; /* ⭐ Sửa: Fill full height để scroll đúng */
-  overflow-y: auto; /* Cho phép scroll nếu nội dung dài */
+  height: 100vh;
+  overflow-y: auto;
 }
 
 /* Content lề chuẩn */
 .content {
   flex: 1;
   padding: 24px;
-  overflow-y: auto; /* ⭐ Sửa: Cho phép scroll nội dung nếu cần */
-  height: calc(100% - 80px); /* Trừ header height ước tính */
+  overflow-y: auto;
+  height: calc(100% - 80px);
 }
 
-/* TOP INFO CARD - Giữ nguyên kích thước */
+/* TOP INFO CARD */
 .topInfoCard {
   display: flex;
   justify-content: space-between;
@@ -33,7 +40,7 @@
   margin-left: 24px;
   background: #F5F6F8;
   box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-  transition: transform 0.2s ease; /* Hiệu ứng nhẹ */
+  transition: transform 0.2s ease;
 }
 
 .topInfoCard:hover {
@@ -95,7 +102,7 @@
   display: grid;
   grid-template-columns: 2fr 1fr;
   grid-gap: 20px;
-  max-width: 100%; /* ⭐ Sửa: Tránh overflow trên màn hình to */
+  max-width: 100%;
 }
 
 /* OVERVIEW */
@@ -141,21 +148,18 @@
 .overviewItem:nth-child(3) { background: #ffe8e8; }
 .overviewItem:nth-child(4) { background: #f0e8ff; }
 
-.iconSuccess  { background: #4caf50; }
-.iconWarning  { background: #ff9800; }
-.iconAlert    { background: #f44336; }
-.iconPurple   { background: #9c27b0; }
-
-.iconSuccess,
-.iconWarning,
-.iconAlert,
-.iconPurple {
+.iconSuccess, .iconWarning, .iconAlert, .iconPurple {
   width: 12px;
   height: 12px;
   border-radius: 50%;
 }
 
-/* Frequency */
+.iconSuccess  { background: #4caf50; }
+.iconWarning  { background: #ff9800; }
+.iconAlert    { background: #f44336; }
+.iconPurple   { background: #9c27b0; }
+
+/* Frequency Card */
 .chartCard {
   padding: 20px;
   border-radius: 16px;
@@ -168,9 +172,16 @@
   transform: translateY(-2px);
 }
 
-#freqChart {
-  width: 100% !important;
-  height: 200px !important; /* ⭐ Sửa: Đảm bảo canvas responsive */
+.chartCard .sub {
+  margin: 6px 0 12px 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.chartContainer {
+  position: relative;
+  height: 180px;        /* Chiều cao thấp như yêu cầu */
+  width: 100%;
 }
 
 /* Performance */
@@ -191,14 +202,13 @@
   margin-top: 15px;
   font-size: 14px;
   border-collapse: collapse;
-  table-layout: fixed; /* ⭐ Sửa: Tránh lệch cột trên màn hình to */
+  table-layout: fixed;
 }
 
-.table th,
-.table td {
+.table th, .table td {
   text-align: left;
   padding: 6px 4px;
-  word-wrap: break-word; /* ⭐ Sửa: Ngăn text dài overflow */
+  word-wrap: break-word;
 }
 
 /* Bars */
@@ -208,15 +218,12 @@
 .barOrange { height: 6px; border-radius: 4px; background: #f97316; width: 25%; }
 
 /* Percent chips */
-.percentBlue,
-.percentGreen,
-.percentTeal,
-.percentOrange {
+.percentBlue, .percentGreen, .percentTeal, .percentOrange {
   padding: 4px 12px;
   border-radius: 999px;
   font-weight: 600;
   font-size: 13px;
-  white-space: nowrap; /* ⭐ Sửa: Ngăn wrap trên màn hình to */
+  white-space: nowrap;
 }
 
 .percentBlue   { background: #dbeafe; color: #1e3a8a; }
@@ -224,20 +231,26 @@
 .percentTeal   { background: #ccfbf1; color: #115e59; }
 .percentOrange { background: #ffedd5; color: #9a3412; }
 
-/* RESPONSIVE - Mở rộng & sửa lỗi */
-@media (min-width: 1441px) { /* ⭐ Sửa: Màn hình to quá - giảm gap để tránh overflow */
+/* Chart.js */
+#freqChart {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* RESPONSIVE */
+@media (min-width: 1441px) {
   .dashboardGrid { grid-gap: 16px; }
   .content { padding: 20px; }
 }
 
 @media (max-width: 1024px) {
   .wrapper { flex-direction: column; }
-  .content { padding: 16px; height: auto; } /* ⭐ Sửa: Auto height trên tablet */
+  .content { padding: 16px; height: auto; }
   .topInfoCard {
     width: auto;
     margin-left: 16px;
     margin-right: 16px;
-    flex-wrap: wrap; /* ⭐ Sửa: Wrap nếu cần */
+    flex-wrap: wrap;
   }
   .dashboardGrid {
     grid-template-columns: 1fr;
@@ -255,7 +268,7 @@
 @media (max-width: 768px) {
   .content {
     padding: 12px;
-    height: auto; /* ⭐ Sửa: Auto để scroll dễ */
+    height: auto;
     overflow-y: auto;
   }
   .topInfoCard {
@@ -282,12 +295,9 @@
   }
   .table {
     font-size: 12px;
-    table-layout: auto; /* ⭐ Sửa: Auto cột trên mobile */
+    table-layout: auto;
   }
-  .percentBlue,
-  .percentGreen,
-  .percentTeal,
-  .percentOrange {
+  .percentBlue, .percentGreen, .percentTeal, .percentOrange {
     font-size: 12px;
     padding: 3px 10px;
   }

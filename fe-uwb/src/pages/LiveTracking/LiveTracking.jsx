@@ -1,24 +1,26 @@
 // src/pages/LiveTracking/LiveTracking.jsx
 import React, { useState, useEffect } from "react";
 import ThreeScene from "./ThreeScene";
+import TwoDScene from "./TwoDScene";           // ← Import 2D
 import styles from "./LiveTracking.module.css";
 import { rtdb } from "../../service/firebase";
 import { ref, onValue } from "firebase/database";
 
 export default function LiveTracking() {
+    const [viewMode, setViewMode] = useState("3D"); // "3D" hoặc "2D"
     const [collapsed, setCollapsed] = useState(false);
     const [collapsedForbidden, setCollapsedForbidden] = useState(true);
     const [forbiddenZones, setForbiddenZones] = useState([]);
 
-    // Trạng thái cảnh báo
-    const [inForbiddenZone, setInForbiddenZone] = useState(false); // Đang vi phạm → badge nhấp nháy
+    // Trạng thái cảnh báo (giữ nguyên hoàn toàn)
+    const [inForbiddenZone, setInForbiddenZone] = useState(false);
     const [violatedZones, setViolatedZones] = useState([]);
-    const [showAlert, setShowAlert] = useState(false); // Hiện popup
-    const [alertCountdown, setAlertCountdown] = useState(30); // 30 giây
-    const [lastAlertTime, setLastAlertTime] = useState(0); // Timestamp lần cuối hiện popup
-    const COOLDOWN_SECONDS = 60; // 60 giây mới được hiện lại popup
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertCountdown, setAlertCountdown] = useState(30);
+    const [lastAlertTime, setLastAlertTime] = useState(0);
+    const COOLDOWN_SECONDS = 60;
 
-    // Lấy forbidden zones từ Firebase
+    // Lấy forbidden zones từ Firebase (giữ nguyên)
     useEffect(() => {
         const zonesRef = ref(rtdb, "uwb/forbidden/zones");
         const unsubscribe = onValue(zonesRef, (snap) => {
@@ -36,7 +38,7 @@ export default function LiveTracking() {
         return () => unsubscribe();
     }, []);
 
-    // Theo dõi vị trí tag và kiểm tra vùng cấm
+    // Theo dõi vị trí tag và kiểm tra vùng cấm (giữ nguyên)
     useEffect(() => {
         const handlePositionUpdate = (event) => {
             const { x, y, z } = event.detail;
@@ -55,22 +57,18 @@ export default function LiveTracking() {
                 );
             });
 
-            // === CẬP NHẬT TRẠNG THÁI ===
             if (violated.length > 0) {
                 setViolatedZones(violated);
-                setInForbiddenZone(true); // Bật badge ngay
+                setInForbiddenZone(true);
 
-                // Chỉ hiện popup nếu đã qua cooldown
                 if (!showAlert && (now - lastAlertTime >= COOLDOWN_SECONDS)) {
                     setShowAlert(true);
                     setAlertCountdown(30);
                     setLastAlertTime(now);
                 }
             } else {
-                // === RA KHOI VÙNG CẤM → TẮT NGAY LẬP TỨC ===
-                setInForbiddenZone(false);     // Tắt badge ngay
-                setViolatedZones([]);          // Xóa danh sách vi phạm
-                // Popup sẽ tự tắt theo countdown, không cần can thiệp
+                setInForbiddenZone(false);
+                setViolatedZones([]);
             }
         };
 
@@ -78,7 +76,7 @@ export default function LiveTracking() {
         return () => window.removeEventListener("tag-position-update", handlePositionUpdate);
     }, [forbiddenZones, showAlert, lastAlertTime]);
 
-    // Countdown tự động tắt popup
+    // Countdown popup (giữ nguyên)
     useEffect(() => {
         if (showAlert) {
             const timer = setInterval(() => {
@@ -97,13 +95,37 @@ export default function LiveTracking() {
 
     return (
         <div className={styles.container}>
-            {/* Header với badge nhấp nháy khi vi phạm */}
+            {/* Header với nút chuyển mode */}
             <div className={styles.header}>
-                3D Live Tracking
-                {inForbiddenZone && <span className={styles.warningBadge}>⚠ VIOLATION OF RESTRICTED ZONE</span>}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    Live Tracking
+                    <div style={{
+                        display: "flex",
+                        background: "#e5e7eb",
+                        borderRadius: "8px",
+                        padding: "3px"
+                    }}>
+                        <button
+                            onClick={() => setViewMode("3D")}
+                            className={`${styles.modeBtn} ${viewMode === "3D" ? styles.modeBtnActive : ""}`}
+                        >
+                            3D View
+                        </button>
+                        <button
+                            onClick={() => setViewMode("2D")}
+                            className={`${styles.modeBtn} ${viewMode === "2D" ? styles.modeBtnActive : ""}`}
+                        >
+                            2D Map
+                        </button>
+                    </div>
+                </div>
+
+                {inForbiddenZone && (
+                    <span className={styles.warningBadge}>⚠ VIOLATION OF RESTRICTED ZONE</span>
+                )}
             </div>
 
-            {/* Legend */}
+            {/* Legend - giữ nguyên */}
             <div className={`${styles.legend} ${collapsed ? styles.legendCollapsed : ""}`}>
                 <div className={styles.toggleBtn} onClick={() => setCollapsed(!collapsed)}>
                     {collapsed ? "⯆" : "⯇"}
@@ -127,7 +149,7 @@ export default function LiveTracking() {
                 )}
             </div>
 
-            {/* Panel Forbidden Zones */}
+            {/* Panel Forbidden Zones - giữ nguyên */}
             <div className={`${styles.forbiddenPanel} ${collapsedForbidden ? styles.forbiddenPanelCollapsed : ""}`}>
                 <div className={styles.toggleBtn} onClick={() => setCollapsedForbidden(!collapsedForbidden)}>
                     {collapsedForbidden ? "⯆" : "⯇"}
@@ -166,17 +188,20 @@ export default function LiveTracking() {
                 )}
             </div>
 
-            {/* Hướng dẫn phím */}
+            {/* Hướng dẫn */}
             <div className={styles.controlsHelp}>
-                Left mouse: rotate | Right mouse: pan | Wheel: zoom | L: labels + paths | B: forbidden zones
+                {viewMode === "3D"
+                    ? "Left mouse: rotate | Right mouse: pan | Wheel: zoom | L: labels + paths | B: forbidden zones"
+                    : "M + Drag = Move Map | Right-Click + Drag = Pan | Drag anchors | Click scale"
+                }
             </div>
 
-            {/* Canvas 3D */}
+            {/* Canvas Area - chuyển đổi giữa 2D và 3D */}
             <div className={styles.canvasWrapper}>
-                <ThreeScene />
+                {viewMode === "3D" ? <ThreeScene /> : <TwoDScene />}
             </div>
 
-            {/* POPUP CẢNH BÁO */}
+            {/* POPUP CẢNH BÁO - giữ nguyên */}
             {showAlert && (
                 <div className={styles.alertOverlay}>
                     <div className={styles.alertPopup}>

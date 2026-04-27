@@ -3,18 +3,22 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
 import styles from "./Dashboard.module.css";
 import Welcome from "../Dashboard/Welcome";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Chart from "chart.js/auto";
 
 export default function Dashboard() {
     const [showWelcome, setShowWelcome] = useState(true);
     const [weather, setWeather] = useState({ city: "Ho Chi Minh City", temp: "25°C" });
     const [currentDate, setCurrentDate] = useState("");
 
+    const chartRef = useRef(null);
+    const chartInstance = useRef(null);
+
     const handleWelcomeFinish = () => {
         setShowWelcome(false);
     };
 
-    // Fetch real-time weather
+    // Fetch weather
     useEffect(() => {
         fetch("https://api.open-meteo.com/v1/forecast?latitude=10.8231&longitude=106.6297&current=temperature_2m&timezone=Asia%2FBangkok")
             .then(res => res.json())
@@ -25,12 +29,87 @@ export default function Dashboard() {
             .catch(() => setWeather({ city: "Ho Chi Minh City", temp: "25°C" }));
     }, []);
 
-    // Current date - auto update
+    // Current date
     useEffect(() => {
         const options = { weekday: 'short', day: 'numeric', month: 'short' };
         const today = new Date().toLocaleDateString('en-GB', options);
-        setCurrentDate(today); // Ví dụ: Sat, 20 Dec
+        setCurrentDate(today);
     }, []);
+
+    // Frequency Chart - User Access Frequency
+    useEffect(() => {
+        if (showWelcome || !chartRef.current) return;
+
+        const ctx = chartRef.current.getContext('2d');
+
+        if (chartInstance.current) {
+            chartInstance.current.destroy();
+        }
+
+        const hours = Array.from({ length: 24 }, (_, i) => i === 0 ? '0h' : `${i}h`);
+
+        const accessData = [5, 3, 2, 4, 8, 22, 48, 85, 105, 98, 72, 65, 58, 62, 71, 79, 88, 82, 64, 45, 31, 18, 12, 7];
+
+        chartInstance.current = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: hours,
+                datasets: [{
+                    label: 'Số lượt truy cập',
+                    data: accessData,
+                    backgroundColor: (context) => {
+                        const colors = [
+                            '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef',
+                            '#ec4899', '#f43f5e', '#f97316', '#eab308'
+                        ];
+                        return colors[context.dataIndex % colors.length];
+                    },
+                    borderColor: '#ffffff',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barThickness: 12,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e2937',
+                        titleColor: '#e2e8f0',
+                        bodyColor: '#94a3b8',
+                        padding: 10,
+                        displayColors: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#e2e8f0', lineWidth: 0.8 },
+                        ticks: {
+                            color: '#64748b',
+                            font: { size: 11 },
+                            stepSize: 20
+                        }
+                    },
+                    x: {
+                        grid: { color: '#e2e8f0', lineWidth: 0.8 },
+                        ticks: {
+                            color: '#64748b',
+                            font: { size: 11 },
+                            maxRotation: 0,
+                            autoSkipPadding: 8
+                        }
+                    }
+                }
+            }
+        });
+
+        return () => {
+            if (chartInstance.current) chartInstance.current.destroy();
+        };
+    }, [showWelcome]);
 
     if (showWelcome) {
         return <Welcome onFinish={handleWelcomeFinish} />;
@@ -43,7 +122,7 @@ export default function Dashboard() {
             <main className={styles.main}>
                 <Header />
 
-                {/* TOP INFO CARD - Sang hơn với glass effect */}
+                {/* TOP INFO CARD */}
                 <div className={styles.topInfoCard}>
                     <div className={styles.topLeft}>
                         <div className={styles.goodRow}>
@@ -105,13 +184,15 @@ export default function Dashboard() {
                         {/* FREQUENCY */}
                         <div className={styles.chartCard}>
                             <h3>Frequency</h3>
-                            <canvas id="freqChart" />
+                            <p className={styles.sub}>User Access Frequency (24 hours)</p>
+                            <div className={styles.chartContainer}>
+                                <canvas ref={chartRef} id="freqChart" />
+                            </div>
                         </div>
 
                         {/* PERFORMANCE */}
                         <div className={styles.performanceCard}>
                             <h3>Performance</h3>
-
                             <table className={styles.table}>
                                 <thead>
                                 <tr>

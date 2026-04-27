@@ -1,3 +1,4 @@
+// src/App.jsx
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home";
@@ -8,6 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LiveTracking from "./pages/LiveTracking/LiveTracking";
 import Sidebar from "./components/Sidebar/Sidebar";
 import SystemConfig from "./pages/SystemConfig/SystemConfig";
+import LiveTracking2D from "./pages/LiveTracking/TwoDScene";
 
 function App() {
     return (
@@ -28,6 +30,7 @@ function App() {
                     }
                 />
 
+                {/* SYSTEM CONFIG */}
                 <Route
                     path="/config"
                     element={
@@ -59,8 +62,7 @@ function App() {
                     }
                 />
 
-
-
+                {/* LIVE TRACKING 3D (giữ nguyên) */}
                 <Route
                     path="/live"
                     element={
@@ -73,8 +75,8 @@ function App() {
                                     overflow: "hidden",
                                 }}
                             >
-                                <div style={{flexShrink: 0}}>
-                                    <Sidebar/>
+                                <div style={{ flexShrink: 0 }}>
+                                    <Sidebar />
                                 </div>
                                 <div
                                     style={{
@@ -92,6 +94,37 @@ function App() {
                     }
                 />
 
+                {/* LIVE TRACKING 2D - BẢN ĐỒ SỐ HÓA (MỚI) */}
+                <Route
+                    path="/live-2d"
+                    element={
+                        <ProtectedRoute>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    height: "100vh",
+                                    width: "100vw",
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <div style={{ flexShrink: 0 }}>
+                                    <Sidebar />
+                                </div>
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: "100vh",
+                                        minWidth: 0,
+                                        position: "relative",
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    <LiveTracking2D />
+                                </div>
+                            </div>
+                        </ProtectedRoute>
+                    }
+                />
             </Routes>
         </BrowserRouter>
     );

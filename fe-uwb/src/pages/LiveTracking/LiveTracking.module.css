@@ -441,3 +441,32 @@
     border-radius: 3px;
     transition: width 1s linear;
 }
+
+/* ==================== MODE SWITCH BUTTONS ==================== */
+.modeBtn {
+    padding: 6px 16px;
+    border: none;
+    background: transparent;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modeBtn:hover {
+    background: #e5e7eb;
+}
+
+.modeBtnActive {
+    background: #ffffff !important;
+    color: #1f2937;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+/* Điều chỉnh header để chứa nút chuyển mode */
+.header {
+    justify-content: space-between;   /* đảm bảo badge nằm bên phải */
+}

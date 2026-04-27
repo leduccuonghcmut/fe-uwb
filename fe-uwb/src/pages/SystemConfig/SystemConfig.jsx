@@ -16,14 +16,26 @@ export default function SystemConfig() {
     const [showCalibModal, setShowCalibModal] = useState(false);
     const [isCalibrating, setIsCalibrating] = useState(false);
 
+    // Trạng thái lưu trữ các device bị khóa tạm thời (trong 15s)
+    const [lockedDevices, setLockedDevices] = useState({});
+
     const deviceTypes = [
         { label: "Pending (00)", type: "Pending", role: 0, id: 0 },
         { label: "Tag (1,1)", type: "Tag", role: 1, id: 1 },
+        { label: "Tag (1,2)", type: "Tag", role: 1, id: 2 },
+        { label: "Tag (1,3)", type: "Tag", role: 1, id: 3 },
+        { label: "Tag (1,4)", type: "Tag", role: 1, id: 4 },
+        { label: "Tag (1,5)", type: "Tag", role: 1, id: 5 },
         { label: "Anchor A0 (2,0)", type: "A0", role: 2, id: 0 },
         { label: "Anchor A1 (2,1)", type: "A1", role: 2, id: 1 },
         { label: "Anchor A2 (2,2)", type: "A2", role: 2, id: 2 },
         { label: "Anchor A3 (2,3)", type: "A3", role: 2, id: 3 },
         { label: "Anchor A4 (2,4)", type: "A4", role: 2, id: 4 },
+        { label: "Anchor A5 (2,5)", type: "A5", role: 2, id: 5 },
+        { label: "Anchor A6 (2,6)", type: "A6", role: 2, id: 6 },
+        { label: "Anchor A7 (2,7)", type: "A7", role: 2, id: 7 },
+        { label: "Anchor A8 (2,8)", type: "A8", role: 2, id: 8 },
+        { label: "Anchor A9 (2,9)", type: "A9", role: 2, id: 9 },
     ];
 
     useEffect(() => {
@@ -36,6 +48,8 @@ export default function SystemConfig() {
                     ...data[key],
                     type: data[key].type || "Pending",
                     status: data[key].status || "offline",
+                    role: data[key].role !== undefined ? data[key].role : 0,
+                    node_id: data[key].node_id !== undefined ? data[key].node_id : 0,
                 }));
                 setDevices(deviceList);
             } else {
@@ -66,6 +80,17 @@ export default function SystemConfig() {
         const selectedOption = deviceTypes.find(opt => opt.label === selectedLabel);
         if (!selectedOption) return;
 
+        // Khóa giao diện thiết bị này trong 15 giây
+        setLockedDevices(prev => ({ ...prev, [deviceId]: true }));
+        setTimeout(() => {
+            setLockedDevices(prev => {
+                const newState = { ...prev };
+                delete newState[deviceId];
+                return newState;
+            });
+        }, 10000);
+
+        // Cập nhật Firebase
         const deviceRef = ref(rtdb, `uwb/devices/${deviceId}`);
         update(deviceRef, {
             type: selectedOption.type,
@@ -134,19 +159,40 @@ export default function SystemConfig() {
                             <div className={styles.emptyState}>No devices found. Vui lòng bật thiết bị và quét BLE...</div>
                         ) : (
                             devices.map((device) => {
-                                const typeClass = device.type === "Tag" ? styles.tag : device.type.startsWith("A") ? styles.anchor : styles.notselected;
+                                // Xác định chính xác option hiện tại dựa trên role và node_id
+                                const currentOption = deviceTypes.find(opt => opt.role === device.role && opt.id === device.node_id) || deviceTypes[0];
+
+                                const typeClass = device.role === 1 ? styles.tag : device.role === 2 ? styles.anchor : styles.notselected;
                                 const statusClass = device.status === "online" ? styles.statusOnline : styles.statusOffline;
-                                const currentOption = deviceTypes.find(opt => opt.type === device.type) || deviceTypes[0];
+
+                                // Node Tên Ngắn gọn: T1, A0, P (Pending)
+                                const nodeShortName = device.role === 1 ? `T${device.node_id}` : device.role === 2 ? `A${device.node_id}` : "P";
+
+                                const isLocked = lockedDevices[device.id];
 
                                 return (
-                                    <div key={device.id} className={`${styles.deviceRow} ${typeClass}`}>
+                                    <div key={device.id} className={`${styles.deviceRow} ${typeClass} ${isLocked ? styles.lockedRow : ""}`}>
                                         <div className={styles.deviceInfo}>
-                                            <div className={styles.deviceName}>MAC: {device.id}</div>
-                                            <div className={`${styles.statusBadge} ${statusClass}`}>● {device.status === "online" ? "Online" : "Offline"}</div>
+                                            {/* Cột hiển thị Badge: T1, A0... */}
+                                            <div className={styles.nodeBadge}>
+                                                {nodeShortName}
+                                            </div>
+                                            <div>
+                                                <div className={styles.deviceName}>MAC: {device.id}</div>
+                                                <div className={`${styles.statusBadge} ${statusClass}`}>● {device.status === "online" ? "Online" : "Offline"}</div>
+                                            </div>
                                         </div>
-                                        <select className={styles.typeSelect} value={currentOption.label} onChange={(e) => handleChangeType(device.id, e.target.value)}>
-                                            {deviceTypes.map((opt) => (<option key={opt.label} value={opt.label}>{opt.label}</option>))}
-                                        </select>
+                                        <div className={styles.deviceAction}>
+                                            {isLocked && <span className={styles.lockedText}>Updating (10 seconds)...</span>}
+                                            <select
+                                                className={styles.typeSelect}
+                                                value={currentOption.label}
+                                                onChange={(e) => handleChangeType(device.id, e.target.value)}
+                                                disabled={isLocked}
+                                            >
+                                                {deviceTypes.map((opt) => (<option key={opt.label} value={opt.label}>{opt.label}</option>))}
+                                            </select>
+                                        </div>
                                     </div>
                                 );
                             })
@@ -154,7 +200,7 @@ export default function SystemConfig() {
                     </div>
                 </div>
 
-                {/* ==================== FORBIDDEN ZONES CARD (giữ nguyên) ==================== */}
+                {/* ==================== FORBIDDEN ZONES CARD ==================== */}
                 <div className={styles.card}>
                     <div className={styles.cardTopBar}>
                         <div className={styles.cardTitle}>Forbidden Zones Management</div>
