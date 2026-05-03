@@ -47,6 +47,7 @@ export default function TwoDScene() {
     const [showGrid, setShowGrid] = useState(true);
     const [showLabels, setShowLabels] = useState(true);
     const [showForbidden, setShowForbidden] = useState(true);
+    const [showCircles, setShowCircles] = useState(false);
 
     const [mapImage, setMapImage] = useState(null);
     const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
@@ -124,18 +125,15 @@ export default function TwoDScene() {
         return () => window.removeEventListener("resize", updateSize);
     }, []);
 
-    // ĐÃ SỬA LỖI NHẬN SOCKET Ở ĐÂY
     useEffect(() => {
         const socket = io("http://localhost:3000", { transports: ["websocket"], reconnection: true });
         socketRef.current = socket;
 
         socket.on("full-state-update", (state) => {
             if (!isDraggingTagRef.current) {
-                // Nếu server gửi dạng danh sách tags (multi-tag)
                 if (state.tags) {
                     setTags(prev => ({ ...prev, ...state.tags }));
                 }
-                // Nếu server gửi dạng 1 tag (single-tag như file server.js hiện tại)
                 if (state.tag) {
                     setTags(prev => {
                         const tagId = state.tag.id ? `T${state.tag.id}` : "T1";
@@ -535,6 +533,7 @@ export default function TwoDScene() {
                         <button className={`${styles.toggleBtn} ${showGrid ? styles.active : ""}`} onClick={() => setShowGrid(v => !v)}>Grid</button>
                         <button className={`${styles.toggleBtn} ${showLabels ? styles.active : ""}`} onClick={() => setShowLabels(v => !v)}>Labels</button>
                         <button className={`${styles.toggleBtn} ${showForbidden ? styles.active : ""}`} onClick={() => setShowForbidden(v => !v)}>Zones</button>
+                        <button className={`${styles.toggleBtn} ${showCircles ? styles.active : ""}`} onClick={() => setShowCircles(v => !v)}>Circles</button>
                     </div>
 
                     <div className={styles.divider} />
@@ -682,6 +681,34 @@ export default function TwoDScene() {
                             <Circle x={0} y={0} radius={3} fill="#ffffff" />
                             {showLabels && <Text x={14} y={-20} text="(0,0)" fontSize={13} fill="#ef4444" fontStyle="bold" listening={false} />}
                         </Group>
+
+                        {/* ĐÃ CẬP NHẬT ĐƯỜNG TRÒN CÓ MÀU NỀN GIỐNG VÙNG CẤM */}
+                        {showCircles && Object.entries(tags).map(([tagId, tagPos]) => {
+                            return Object.entries(anchors).map(([id, pos]) => {
+                                const dx = tagPos.x - pos.x;
+                                const dy = tagPos.y - pos.y;
+                                const physicalDistance = Math.sqrt(dx * dx + dy * dy);
+
+                                const radiusPx = physicalDistance * getPxPerM();
+                                const screenAnchor = toScreen(pos.x, pos.y);
+                                const color = pos.color || "#0004fc";
+
+                                return (
+                                    <Circle
+                                        key={`circle-${tagId}-${id}`}
+                                        x={screenAnchor.x}
+                                        y={screenAnchor.y}
+                                        radius={radiusPx}
+                                        // Sử dụng màu Anchor + độ trong suốt hex (20 ~ 12%) để tạo hiệu ứng vùng
+                                        fill={color + "20"}
+                                        stroke={color}
+                                        strokeWidth={1}
+                                        opacity={0.8}
+                                        listening={false}
+                                    />
+                                );
+                            });
+                        })}
 
                         {Object.entries(tags).map(([tagId, tagPos]) => {
                             const screenTag = toScreen(tagPos.x, tagPos.y);

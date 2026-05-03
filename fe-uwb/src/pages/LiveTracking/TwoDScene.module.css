@@ -360,3 +360,11 @@
     cursor: pointer;
     font-weight: 500;
 }
+
+/* Có thể thêm tùy chọn ở cuối file TwoDScene.module.css nếu muốn đổi màu nhấn mạnh cho nút Circles */
+.toggleBtn.circleActive {
+    background: #ffffff;
+    color: #ff5500; /* Màu cam giống màu của Tag */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-color: #ff5500;
+}

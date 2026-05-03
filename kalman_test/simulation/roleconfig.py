@@ -8,7 +8,7 @@ from winsdk.windows.devices.bluetooth.advertisement import (
 from winsdk.windows.storage.streams import DataWriter
 
 async def send_ble_windows():
-    mac_hex = "2323"
+    mac_hex = "8629"
     role = 2
     node_id = 0
     mac_int = int(mac_hex, 16)
