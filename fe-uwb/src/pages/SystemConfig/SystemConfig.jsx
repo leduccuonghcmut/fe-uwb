@@ -1,4 +1,3 @@
-// src/pages/SystemConfig/SystemConfig.jsx
 import styles from "./SystemConfig.module.css";
 import { useEffect, useState } from "react";
 import Header from "../../components/Header/Header";
@@ -6,19 +5,21 @@ import { rtdb } from "../../service/firebase";
 import { ref, onValue, push, remove, set, update } from "firebase/database";
 
 export default function SystemConfig() {
+    // Device state
     const [devices, setDevices] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [lockedDevices, setLockedDevices] = useState({});
 
+    // Geofence state
     const [zones, setZones] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newZone, setNewZone] = useState({ x: 0, y: 0, z: 0, w: 4, h: 3, d: 4 });
 
+    // Calibration state
     const [showCalibModal, setShowCalibModal] = useState(false);
     const [isCalibrating, setIsCalibrating] = useState(false);
 
-    // Trạng thái lưu trữ các device bị khóa tạm thời (trong 15s)
-    const [lockedDevices, setLockedDevices] = useState({});
-
+    // Device type options with role/node_id mapping
     const deviceTypes = [
         { label: "Pending (00)", type: "Pending", role: 0, id: 0 },
         { label: "Tag (1,1)", type: "Tag", role: 1, id: 1 },

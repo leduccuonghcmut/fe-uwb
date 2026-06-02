@@ -1,26 +1,28 @@
-// src/pages/LiveTracking/LiveTracking.jsx
 import React, { useState, useEffect } from "react";
 import ThreeScene from "./ThreeScene";
-import TwoDScene from "./TwoDScene";           // ← Import 2D
+import TwoDScene from "./TwoDScene";
 import styles from "./LiveTracking.module.css";
 import { rtdb } from "../../service/firebase";
 import { ref, onValue } from "firebase/database";
 
 export default function LiveTracking() {
-    const [viewMode, setViewMode] = useState("3D"); // "3D" hoặc "2D"
+    // View mode toggle (3D or 2D)
+    const [viewMode, setViewMode] = useState("3D");
     const [collapsed, setCollapsed] = useState(false);
     const [collapsedForbidden, setCollapsedForbidden] = useState(true);
+    
+    // Geofence state
     const [forbiddenZones, setForbiddenZones] = useState([]);
-
-    // Trạng thái cảnh báo (giữ nguyên hoàn toàn)
     const [inForbiddenZone, setInForbiddenZone] = useState(false);
     const [violatedZones, setViolatedZones] = useState([]);
+    
+    // Alert system
     const [showAlert, setShowAlert] = useState(false);
     const [alertCountdown, setAlertCountdown] = useState(30);
     const [lastAlertTime, setLastAlertTime] = useState(0);
     const COOLDOWN_SECONDS = 60;
 
-    // Lấy forbidden zones từ Firebase (giữ nguyên)
+    // Fetch forbidden zones from Firebase Realtime Database
     useEffect(() => {
         const zonesRef = ref(rtdb, "uwb/forbidden/zones");
         const unsubscribe = onValue(zonesRef, (snap) => {

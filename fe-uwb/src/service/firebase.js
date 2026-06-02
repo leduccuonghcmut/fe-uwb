@@ -3,7 +3,6 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 
-// CẤU HÌNH — thay bằng config của bạn
 const firebaseConfig = {
     apiKey: "AIzaSyBGT9Cpfhj551AB05Q-L94OCxL5ARDth_8",
     authDomain: "dauwb-58554.firebaseapp.com",
@@ -15,10 +14,8 @@ const firebaseConfig = {
     measurementId: "G-5YJMD7W4E8"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Export DB để toàn project dùng
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const rtdb = getDatabase(app);

@@ -6,7 +6,9 @@ import "remixicon/fonts/remixicon.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
 createRoot(document.getElementById('root')).render(
-    <AuthProvider>
-        <App />
-    </AuthProvider>
+    <StrictMode>
+        <AuthProvider>
+            <App />
+        </AuthProvider>
+    </StrictMode>
 )

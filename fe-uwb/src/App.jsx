@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home";
@@ -11,20 +10,19 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import SystemConfig from "./pages/SystemConfig/SystemConfig";
 import LiveTracking2D from "./pages/LiveTracking/TwoDScene";
 import AdvanceFeature from "./pages/AdvancedFeature/AdvanceFeature";
-
-// Import trang Export mới tạo
 import Export from "./pages/Export/Export";
 
 function App() {
     return (
         <BrowserRouter>
             <Routes>
-                {/* PUBLIC */}
+                {/* ===== PUBLIC ROUTES ===== */}
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
-                {/* DASHBOARD */}
+                {/* ===== PROTECTED ROUTES ===== */}
+                {/* Dashboard - Main overview */}
                 <Route
                     path="/dashboard"
                     element={
@@ -98,7 +96,7 @@ function App() {
                     }
                 />
 
-                {/* EXPORT DATA (MỚI THÊM) */}
+                {/* EXPORT DATA */}
                 <Route
                     path="/export"
                     element={
@@ -120,7 +118,7 @@ function App() {
                                         flex: 1,
                                         height: "100vh",
                                         overflowY: "auto",
-                                        background: "#f8fafc", /* Nền đồng bộ với giao diện */
+                                        background: "#f8fafc", 
                                     }}
                                 >
                                     <Export />

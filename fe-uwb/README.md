@@ -1,20 +1,42 @@
-<<<<<<< HEAD
-# fe-test
-=======
-# React + Vite
+# UWB Real-time Tracking System - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
 
-Currently, two official plugins are available:
+Frontend for an **Ultra-Wideband (UWB) Real-time Tracking System** built with **React + Vite**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Features:
+- Firebase Authentication (Email/Password + Google OAuth)
+- Real-time position tracking (3D/2D visualization)
+- Geofence management (forbidden zones)
+- Device configuration & status monitoring
+- Live dashboard with analytics
+- WebSocket communication via Socket.IO
 
-## React Compiler
+## Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
->>>>>>> 9f9c92c (Initial commit)
+src/
+├── main.jsx                 # React entry point
+├── App.jsx                  # Routes & layout
+├── index.css               # Global styles
+├── components/             # Reusable UI components
+│   ├── Header/
+│   ├── Sidebar/
+│   ├── OverviewCard/
+│   └── ProtectedRoute.jsx
+├── pages/                  # Page components (routes)
+│   ├── Home/
+│   ├── Login/
+│   ├── Register/
+│   ├── Dashboard/
+│   ├── SystemConfig/       # Device & zone management
+│   ├── LiveTracking/       # 3D/2D tracking visualization
+│   ├── Export/
+│   └── AdvancedFeature/
+├── service/                # API & Firebase connections
+│   ├── firebase.js         # Firebase initialization
+│   ├── auth.js             # Authentication functions
+│   ├── socket.js           # Socket.IO client
+│   ├── deviceService.js    # Device CRUD operations
+│   └── init-firebase.js    # Database structure setup
+└── context/
+    └── AuthContext.jsx     # Global authentication state

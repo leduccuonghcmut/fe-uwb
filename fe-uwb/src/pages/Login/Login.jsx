@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
 
-import { loginUser } from "../../service/auth";
-import { loginWithGoogle } from "../../service/auth";   // 🔥 Thêm dòng này
+import { loginUser, loginWithGoogle } from "../../service/auth";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -27,7 +26,6 @@ const Login = () => {
     }
   };
 
-  // 🔥 Thêm Google Login nhưng không sửa giao diện
   const handleGoogle = async () => {
     try {
       await loginWithGoogle();
@@ -38,67 +36,66 @@ const Login = () => {
   };
 
   return (
-      <div className={styles.pageWrapper}>
-        <div className={styles.card}>
-          <h2 className={styles.titleSmall}>Enter Workspace</h2>
+    <div className={styles.pageWrapper}>
+      <div className={styles.card}>
+        <h2 className={styles.titleSmall}>Enter Workspace</h2>
 
-          {error && <div className={styles.errorBox}>{error}</div>}
+        {error && <div className={styles.errorBox}>{error}</div>}
 
-          <label className={styles.label}>Email</label>
+        <label className={styles.label}>Email</label>
+        <input
+          type="email"
+          className={styles.input}
+          placeholder="username@gmail.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <label className={styles.label}>Password</label>
+        <div className={styles.passwordWrapper}>
           <input
-              type="email"
-              className={styles.input}
-              placeholder="username@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+            type={showPw ? "text" : "password"}
+            className={styles.input}
+            placeholder="Password"
+            value={pw}
+            onChange={(e) => {
+              setPw(e.target.value);
+              if (e.target.value.length === 0) setShowPw(false);
+            }}
           />
 
-          <label className={styles.label}>Password</label>
-          <div className={styles.passwordWrapper}>
-            <input
-                type={showPw ? "text" : "password"}
-                className={styles.input}
-                placeholder="Password"
-                value={pw}
-                onChange={(e) => {
-                  setPw(e.target.value);
-                  if (e.target.value.length === 0) setShowPw(false);
-                }}
-            />
+          {pw.length > 0 && (
+            <i
+              className={`${styles.eyeIcon} ${
+                showPw ? "ri-eye-off-line" : "ri-eye-line"
+              }`}
+              onClick={() => setShowPw(!showPw)}
+            ></i>
+          )}
+        </div>
 
-            {pw.length > 0 && (
-                <i
-                    className={`${styles.eyeIcon} ${
-                        showPw ? "ri-eye-off-line" : "ri-eye-line"
-                    }`}
-                    onClick={() => setShowPw(!showPw)}
-                ></i>
-            )}
-          </div>
+        <button className={styles.signinBtn} onClick={handleLogin}>
+          Sign in
+        </button>
 
-          <button className={styles.signinBtn} onClick={handleLogin}>
-            Sign in
-          </button>
+        <div className={styles.or}>Or Continue With</div>
 
-          <div className={styles.or}>Or Continue With</div>
+        <button className={styles.googleBtn} onClick={handleGoogle}>
+          <img
+            src="https://www.svgrepo.com/show/355037/google.svg"
+            className={styles.googleIcon}
+          />
+        </button>
 
-          {/* 🔥 Chỉ thêm onClick, không đổi UI */}
-          <button className={styles.googleBtn} onClick={handleGoogle}>
-            <img
-                src="https://www.svgrepo.com/show/355037/google.svg"
-                className={styles.googleIcon}
-            />
-          </button>
-
-          <div className={styles.registerText}>
-            Don’t have an account yet?
-            <Link to="/register" className={styles.registerLink}>
-              {" "}
-              Register for free
-            </Link>
-          </div>
+        <div className={styles.registerText}>
+          Don’t have an account yet?
+          <Link to="/register" className={styles.registerLink}>
+            {" "}
+            Register for free
+          </Link>
         </div>
       </div>
+    </div>
   );
 };
 
