@@ -18,10 +18,12 @@
     "react-dom": "^19.2.0",
     "react-konva": "^19.2.3",
     "react-router-dom": "^7.9.6",
+    "recharts": "^3.8.1",
     "remixicon": "^4.7.0",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
-    "three": "^0.181.1"
+    "socket.io-client": "^4.8.3",
+    "three": "^0.181.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

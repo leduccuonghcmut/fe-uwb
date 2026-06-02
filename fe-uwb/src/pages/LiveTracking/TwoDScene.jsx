@@ -1,10 +1,13 @@
 // src/pages/LiveTracking/TwoDScene.jsx
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Stage, Layer, Circle, Line, Text, Group, Image as KonvaImage, Rect } from "react-konva";
 import styles from "./TwoDScene.module.css";
 import { rtdb } from "../../service/firebase";
-import { ref, onValue, set } from "firebase/database";
+import { ref, onValue, set, push } from "firebase/database";
 import io from "socket.io-client";
+
+// Import component AI Analytics
+import AnalyticsMap from "./AnalyticsMap";
 
 const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
@@ -24,12 +27,14 @@ const BASE_SCALE = 50;
 const GRID_MODES = [0.1, 0.2, 0.5, 1, 2, 5];
 
 export default function TwoDScene() {
+    const [viewMode, setViewMode] = useState("live");
+
     const [isPanelExpanded, setIsPanelExpanded] = useState(false);
     const [roomList, setRoomList] = useState({});
     const [currentRoom, setCurrentRoom] = useState("");
 
     const [anchors, setAnchors] = useState({});
-    const [tags, setTags] = useState({}); // Lấy từ Firebase, không khởi tạo cứng
+    const [tags, setTags] = useState({});
     const [forbiddenZones, setForbiddenZones] = useState([]);
 
     const [scale, setScale] = useState(() => parseInt(localStorage.getItem("twoD_scale")) || BASE_SCALE);
@@ -47,6 +52,7 @@ export default function TwoDScene() {
     const [showGrid, setShowGrid] = useState(true);
     const [showLabels, setShowLabels] = useState(true);
     const [showForbidden, setShowForbidden] = useState(true);
+    const [showCircles, setShowCircles] = useState(false);
 
     const [mapImage, setMapImage] = useState(null);
     const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
@@ -128,10 +134,36 @@ export default function TwoDScene() {
         const socket = io("http://localhost:3000", { transports: ["websocket"], reconnection: true });
         socketRef.current = socket;
 
-        // Nhận dữ liệu cập nhật tọa độ real-time từ server
         socket.on("full-state-update", (state) => {
-            if (state.tags && !isDraggingTagRef.current) {
-                setTags(prev => ({ ...prev, ...state.tags }));
+            if (!isDraggingTagRef.current) {
+                if (state.tags) {
+                    setTags(prev => ({ ...prev, ...state.tags }));
+                }
+                if (state.tag) {
+                    setTags(prev => {
+                        const tagId = state.tag.id ? `T${state.tag.id}` : "T1";
+                        const posX = state.tag.x;
+                        const posY = state.tag.y !== undefined ? state.tag.y : state.tag.z;
+
+                        push(ref(rtdb, `uwb/history/${tagId}`), { x: posX, y: posY, timestamp: Date.now() });
+
+                        return { ...prev, [tagId]: { x: posX, y: posY } };
+                    });
+                }
+            }
+        });
+
+        socket.on("tag-update", (tag) => {
+            if (!isDraggingTagRef.current && tag) {
+                setTags(prev => {
+                    const tagId = tag.id ? `T${tag.id}` : "T1";
+                    const posX = tag.x;
+                    const posY = tag.y !== undefined ? tag.y : tag.z;
+
+                    push(ref(rtdb, `uwb/history/${tagId}`), { x: posX, y: posY, timestamp: Date.now() });
+
+                    return { ...prev, [tagId]: { x: posX, y: posY } };
+                });
             }
         });
 
@@ -163,11 +195,10 @@ export default function TwoDScene() {
 
         const roomPath = `uwb/rooms/${currentRoom}`;
 
-        // Load Tags đã lưu (Để không bị mất khi reload web)
         const unsubTags = onValue(ref(rtdb, `${roomPath}/tags`), (snap) => {
             const data = snap.val() || {};
             if (!isDraggingTagRef.current) {
-                setTags(data);
+                setTags(prev => ({ ...prev, ...data }));
             }
         });
 
@@ -208,7 +239,6 @@ export default function TwoDScene() {
             }
         });
 
-        // Đã sửa lỗi đường dẫn: Vùng cấm nằm ở root uwb/forbidden/zones
         const unsubZones = onValue(ref(rtdb, `uwb/forbidden/zones`), (snap) => {
             const data = snap.val();
             const zonesList = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
@@ -278,7 +308,6 @@ export default function TwoDScene() {
         });
         setAnchors(updatedAnchors);
 
-        // Update tags ratio
         const newTags = {};
         Object.keys(tags).forEach(id => {
             newTags[id] = { x: tags[id].x * ratio, y: tags[id].y * ratio };
@@ -341,7 +370,6 @@ export default function TwoDScene() {
         }
     };
 
-    // Hàm thêm Tag mới và LƯU TRỰC TIẾP LÊN FIREBASE
     const addNewTag = () => {
         const ids = Object.keys(tags).map(k => parseInt(k.replace(/\D/g, '')) || 0);
         const maxId = ids.length ? Math.max(...ids) : 0;
@@ -503,39 +531,105 @@ export default function TwoDScene() {
     const zoomRatio = scale / BASE_SCALE;
     const effectiveMapScale = mapScale * zoomRatio;
 
+    // ==========================================
+    // LOGIC CẢNH BÁO TAG VÀO VÙNG CẤM (2D)
+    // ==========================================
+    const tagsInZones = useMemo(() => {
+        const inZones = [];
+        Object.entries(tags).forEach(([tagId, tagPos]) => {
+            const tx = tagPos.x;
+            const ty = tagPos.y;
+            forbiddenZones.forEach(zone => {
+                const zx = zone.x || 0;
+                const zy = zone.z || 0; // Trong 2D, Firebase lưu biến z làm trục dọc
+                const zw = zone.w || 4;
+                const zh = zone.d || 4;
+
+                if (Math.abs(tx - zx) <= zw / 2 && Math.abs(ty - zy) <= zh / 2) {
+                    if (!inZones.includes(tagId)) inZones.push(tagId);
+                }
+            });
+        });
+        return inZones;
+    }, [tags, forbiddenZones]);
+
     return (
         <div className={styles.container}>
-            <div className={styles.topControlContainer}>
+            {/* HIỂN THỊ CẢNH BÁO NỔI */}
+            {tagsInZones.length > 0 && viewMode === 'live' && (
+                <div style={{
+                    position: 'absolute', top: '140px', left: '50%', transform: 'translateX(-50%)',
+                    background: '#fee2e2', color: '#991b1b', padding: '10px 24px', borderRadius: '8px',
+                    border: '2px solid #ef4444', fontWeight: 'bold', zIndex: 2000,
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)', display: 'flex', alignItems: 'center', gap: '8px',
+                    fontSize: '15px'
+                }}>
+                    <i className="ri-error-warning-fill" style={{ fontSize: '22px' }}></i>
+                    WARNING: {tagsInZones.join(', ')} in restricted area!
+                </div>
+            )}
+
+            <div className={styles.topControlContainer} style={{ zIndex: 1000 }}>
                 <div className={styles.compactBar}>
-                    <select
-                        value={currentRoom}
-                        onChange={(e) => setCurrentRoom(e.target.value)}
-                        className={styles.select}
-                    >
-                        {Object.entries(roomList).map(([id, info]) => (
-                            <option key={id} value={id}>{info.name}</option>
-                        ))}
-                    </select>
-
-                    <div className={styles.divider} />
-
-                    <div className={styles.toggleGroup}>
-                        <button className={`${styles.toggleBtn} ${showGrid ? styles.active : ""}`} onClick={() => setShowGrid(v => !v)}>Grid</button>
-                        <button className={`${styles.toggleBtn} ${showLabels ? styles.active : ""}`} onClick={() => setShowLabels(v => !v)}>Labels</button>
-                        <button className={`${styles.toggleBtn} ${showForbidden ? styles.active : ""}`} onClick={() => setShowForbidden(v => !v)}>Zones</button>
+                    <div className={styles.toggleGroup} style={{ background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
+                        <button
+                            className={`${styles.toggleBtn} ${viewMode === 'live' ? styles.active : ""}`}
+                            onClick={() => setViewMode('live')}
+                            style={{ padding: '6px 12px', fontWeight: viewMode === 'live' ? '700' : '500' }}
+                        >
+                            <i className="ri-focus-2-line" style={{ marginRight: '6px' }}></i>
+                            Live Map
+                        </button>
+                        <button
+                            className={`${styles.toggleBtn} ${viewMode === 'ai' ? styles.active : ""}`}
+                            onClick={() => setViewMode('ai')}
+                            style={{
+                                padding: '6px 12px',
+                                color: viewMode === 'ai' ? '#7c3aed' : '#64748b',
+                                fontWeight: viewMode === 'ai' ? '700' : '500'
+                            }}
+                        >
+                            <i className="ri-magic-line" style={{ marginRight: '6px' }}></i>
+                            Analytics
+                        </button>
                     </div>
 
-                    <div className={styles.divider} />
+                    {viewMode === 'live' && (
+                        <>
+                            <div className={styles.divider} />
 
-                    <button
-                        className={`${styles.expandBtn} ${isPanelExpanded ? styles.expanded : ""}`}
-                        onClick={() => setIsPanelExpanded(!isPanelExpanded)}
-                    >
-                        {isPanelExpanded ? "Collapse ▴" : "Settings ▾"}
-                    </button>
+                            <select
+                                value={currentRoom}
+                                onChange={(e) => setCurrentRoom(e.target.value)}
+                                className={styles.select}
+                            >
+                                {Object.entries(roomList).map(([id, info]) => (
+                                    <option key={id} value={id}>{info.name}</option>
+                                ))}
+                            </select>
+
+                            <div className={styles.divider} />
+
+                            <div className={styles.toggleGroup}>
+                                <button className={`${styles.toggleBtn} ${showGrid ? styles.active : ""}`} onClick={() => setShowGrid(v => !v)}>Grid</button>
+                                <button className={`${styles.toggleBtn} ${showLabels ? styles.active : ""}`} onClick={() => setShowLabels(v => !v)}>Labels</button>
+                                <button className={`${styles.toggleBtn} ${showForbidden ? styles.active : ""}`} onClick={() => setShowForbidden(v => !v)}>Zones</button>
+                                <button className={`${styles.toggleBtn} ${showCircles ? styles.active : ""}`} onClick={() => setShowCircles(v => !v)}>Circles</button>
+                            </div>
+
+                            <div className={styles.divider} />
+
+                            <button
+                                className={`${styles.expandBtn} ${isPanelExpanded ? styles.expanded : ""}`}
+                                onClick={() => setIsPanelExpanded(!isPanelExpanded)}
+                            >
+                                {isPanelExpanded ? "Collapse ▴" : "Settings ▾"}
+                            </button>
+                        </>
+                    )}
                 </div>
 
-                {isPanelExpanded && (
+                {viewMode === 'live' && isPanelExpanded && (
                     <div className={styles.expandedPanel}>
                         <div className={styles.panelGrid}>
                             <div className={styles.section}>
@@ -606,204 +700,231 @@ export default function TwoDScene() {
                 )}
             </div>
 
-            <div ref={containerRef} className={styles.canvasWrapper} onContextMenu={(e) => e.preventDefault()}>
-                <Stage
-                    ref={stageRef}
-                    x={stagePos.x}
-                    y={stagePos.y}
-                    width={stageSize.width}
-                    height={stageSize.height}
-                    draggable={false}
-                    onContextMenu={(e) => e.evt.preventDefault()}
-                    onMouseDown={handleStageMouseDown}
-                    onMouseMove={handleStageMouseMove}
-                    onMouseUp={handleStageMouseUp}
-                    onMouseLeave={handleStageMouseUp}
-                >
-                    <Layer>
-                        {mapImage && (
-                            <KonvaImage
-                                image={mapImage}
-                                x={originPx.x + mapOffset.x * zoomRatio}
-                                y={originPx.y + mapOffset.y * zoomRatio}
-                                width={(mapImage?.width || 0) * effectiveMapScale}
-                                height={(mapImage?.height || 0) * effectiveMapScale}
-                                opacity={0.92}
-                                listening={false}
-                            />
-                        )}
-
-                        {renderGrid()}
-
-                        {/* ================= MAP VÙNG CẤM ================= */}
-                        {showForbidden && forbiddenZones.map(zone => {
-                            const physX = zone.x || 0;
-                            const physY = zone.z || 0;
-                            const physW = zone.w || 4;
-                            const physH = zone.d || 4;
-
-                            const wPx = physW * getPxPerM();
-                            const hPx = physH * getPxPerM();
-                            const topLeftScreen = toScreen(physX - physW / 2, physY + physH / 2);
-
-                            return (
-                                <Rect
-                                    key={zone.id}
-                                    x={topLeftScreen.x}
-                                    y={topLeftScreen.y}
-                                    width={wPx}
-                                    height={hPx}
-                                    fill="rgba(239, 172, 172, 0.35)"
-                                    stroke="#d32f2f"
-                                    strokeWidth={1}
+            {viewMode === 'live' ? (
+                <div ref={containerRef} className={styles.canvasWrapper} onContextMenu={(e) => e.preventDefault()}>
+                    <Stage
+                        ref={stageRef}
+                        x={stagePos.x}
+                        y={stagePos.y}
+                        width={stageSize.width}
+                        height={stageSize.height}
+                        draggable={false}
+                        onContextMenu={(e) => e.evt.preventDefault()}
+                        onMouseDown={handleStageMouseDown}
+                        onMouseMove={handleStageMouseMove}
+                        onMouseUp={handleStageMouseUp}
+                        onMouseLeave={handleStageMouseUp}
+                    >
+                        <Layer>
+                            {mapImage && (
+                                <KonvaImage
+                                    image={mapImage}
+                                    x={originPx.x + mapOffset.x * zoomRatio}
+                                    y={originPx.y + mapOffset.y * zoomRatio}
+                                    width={(mapImage?.width || 0) * effectiveMapScale}
+                                    height={(mapImage?.height || 0) * effectiveMapScale}
+                                    opacity={0.92}
                                     listening={false}
                                 />
-                            );
-                        })}
+                            )}
 
-                        <Group
-                            x={originPx.x}
-                            y={originPx.y}
-                            draggable
-                            onDragEnd={(e) => updateOriginPx({ x: e.target.x(), y: e.target.y() })}
-                        >
-                            <Circle x={0} y={0} radius={6} fill="#ef4444" />
-                            <Circle x={0} y={0} radius={3} fill="#ffffff" />
-                            {showLabels && <Text x={14} y={-20} text="(0,0)" fontSize={13} fill="#ef4444" fontStyle="bold" listening={false} />}
-                        </Group>
+                            {renderGrid()}
 
-                        {/* Tia Laser kết nối cho tất cả các Tags */}
-                        {Object.entries(tags).map(([tagId, tagPos]) => {
-                            const screenTag = toScreen(tagPos.x, tagPos.y);
-                            return Object.entries(anchors).map(([id, pos]) => {
-                                const screenAnchor = toScreen(pos.x, pos.y);
+                            {showForbidden && forbiddenZones.map(zone => {
+                                const physX = zone.x || 0;
+                                const physY = zone.z || 0;
+                                const physW = zone.w || 4;
+                                const physH = zone.d || 4;
+
+                                const wPx = physW * getPxPerM();
+                                const hPx = physH * getPxPerM();
+                                const topLeftScreen = toScreen(physX - physW / 2, physY + physH / 2);
+
                                 return (
-                                    <Line
-                                        key={`line-${tagId}-${id}`}
-                                        points={[screenTag.x, screenTag.y, screenAnchor.x, screenAnchor.y]}
-                                        stroke={pos.color || "#0004fc"} strokeWidth={1.5} opacity={0.35} dash={[5,4]} listening={false}
+                                    <Rect
+                                        key={zone.id}
+                                        x={topLeftScreen.x}
+                                        y={topLeftScreen.y}
+                                        width={wPx}
+                                        height={hPx}
+                                        fill="rgba(239, 172, 172, 0.35)"
+                                        stroke="#d32f2f"
+                                        strokeWidth={1}
+                                        listening={false}
                                     />
                                 );
-                            });
-                        })}
+                            })}
 
-                        {Object.entries(anchors).map(([id, pos]) => {
-                            const color = pos.color || "#0004fc";
-                            const screenPos = toScreen(pos.x, pos.y);
-                            const isLocked = lockedAnchors[id];
+                            <Group
+                                x={originPx.x}
+                                y={originPx.y}
+                                draggable
+                                onDragEnd={(e) => updateOriginPx({ x: e.target.x(), y: e.target.y() })}
+                            >
+                                <Circle x={0} y={0} radius={6} fill="#ef4444" />
+                                <Circle x={0} y={0} radius={3} fill="#ffffff" />
+                                {showLabels && <Text x={14} y={-20} text="(0,0)" fontSize={13} fill="#ef4444" fontStyle="bold" listening={false} />}
+                            </Group>
 
-                            return (
+                            {showCircles && Object.entries(tags).map(([tagId, tagPos]) => {
+                                return Object.entries(anchors).map(([id, pos]) => {
+                                    const dx = tagPos.x - pos.x;
+                                    const dy = tagPos.y - pos.y;
+                                    const physicalDistance = Math.sqrt(dx * dx + dy * dy);
+
+                                    const radiusPx = physicalDistance * getPxPerM();
+                                    const screenAnchor = toScreen(pos.x, pos.y);
+                                    const color = pos.color || "#0004fc";
+
+                                    return (
+                                        <Circle
+                                            key={`circle-${tagId}-${id}`}
+                                            x={screenAnchor.x}
+                                            y={screenAnchor.y}
+                                            radius={radiusPx}
+                                            fill={color + "20"}
+                                            stroke={color}
+                                            strokeWidth={1}
+                                            opacity={0.8}
+                                            listening={false}
+                                        />
+                                    );
+                                });
+                            })}
+
+                            {Object.entries(tags).map(([tagId, tagPos]) => {
+                                const screenTag = toScreen(tagPos.x, tagPos.y);
+                                return Object.entries(anchors).map(([id, pos]) => {
+                                    const screenAnchor = toScreen(pos.x, pos.y);
+                                    return (
+                                        <Line
+                                            key={`line-${tagId}-${id}`}
+                                            points={[screenTag.x, screenTag.y, screenAnchor.x, screenAnchor.y]}
+                                            stroke={pos.color || "#0004fc"} strokeWidth={1.5} opacity={0.35} dash={[5,4]} listening={false}
+                                        />
+                                    );
+                                });
+                            })}
+
+                            {Object.entries(anchors).map(([id, pos]) => {
+                                const color = pos.color || "#0004fc";
+                                const screenPos = toScreen(pos.x, pos.y);
+                                const isLocked = lockedAnchors[id];
+
+                                return (
+                                    <Group
+                                        key={id}
+                                        x={screenPos.x}
+                                        y={screenPos.y}
+                                        draggable={!isLocked}
+                                        onDragStart={handleAnchorDragStart}
+                                        onDragEnd={(e) => {
+                                            isDraggingAnchorRef.current = false;
+                                            const phys = toPhysical(e.target.x(), e.target.y());
+                                            const newX = phys.x;
+                                            const newY = phys.y;
+
+                                            const updated = { ...anchors, [id]: { ...anchors[id], x: newX, y: newY } };
+                                            setAnchors(updated);
+                                            saveAnchor(id, updated[id]);
+
+                                            if (socketRef.current) socketRef.current.emit("update_anchor", { roomId: currentRoom, id, x: newX, y: newY });
+                                            e.target.position(toScreen(newX, newY));
+                                        }}
+                                        onClick={() => handleAnchorClick(id)}
+                                        onTap={() => handleAnchorClick(id)}
+                                    >
+                                        <Circle x={0} y={0} radius={20} fill="transparent" stroke={color} strokeWidth={isLocked ? 4 : 2} opacity={isLocked ? 0.8 : 0.25} dash={isLocked ? [4, 4] : undefined} listening={false} />
+                                        <Circle x={0} y={0} radius={11} fill={color} shadowBlur={12} shadowColor={color} shadowOpacity={0.6} />
+                                        {showLabels && (
+                                            <>
+                                                <Text x={18} y={-12} text={id} fontSize={14} fill={color} fontStyle="bold" listening={false} />
+                                                <Text x={18} y={6} text={`(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)})`} fontSize={10.5} fill="#64748b" listening={false} />
+                                                {isLocked && <Text x={18} y={20} text="Locked (10s)" fontSize={10} fill="#f59e0b" fontStyle="bold" listening={false} />}
+                                            </>
+                                        )}
+                                    </Group>
+                                );
+                            })}
+
+                            {Object.entries(tags).map(([tagId, tagPos]) => (
                                 <Group
-                                    key={id}
-                                    x={screenPos.x}
-                                    y={screenPos.y}
-                                    draggable={!isLocked}
-                                    onDragStart={handleAnchorDragStart}
+                                    key={tagId}
+                                    x={toScreen(tagPos.x, tagPos.y).x}
+                                    y={toScreen(tagPos.x, tagPos.y).y}
+                                    draggable
+                                    onDragStart={() => { isDraggingTagRef.current = true; }}
                                     onDragEnd={(e) => {
-                                        isDraggingAnchorRef.current = false;
+                                        isDraggingTagRef.current = false;
                                         const phys = toPhysical(e.target.x(), e.target.y());
                                         const newX = phys.x;
                                         const newY = phys.y;
 
-                                        const updated = { ...anchors, [id]: { ...anchors[id], x: newX, y: newY } };
-                                        setAnchors(updated);
-                                        saveAnchor(id, updated[id]);
-
-                                        if (socketRef.current) socketRef.current.emit("update_anchor", { roomId: currentRoom, id, x: newX, y: newY });
+                                        set(ref(rtdb, `uwb/rooms/${currentRoom}/tags/${tagId}`), { x: newX, y: newY });
                                         e.target.position(toScreen(newX, newY));
+
+                                        if (socketRef.current) {
+                                            socketRef.current.emit("sim_tag_update", { roomId: currentRoom, id: tagId, x: newX, y: newY });
+                                        }
                                     }}
-                                    onClick={() => handleAnchorClick(id)}
-                                    onTap={() => handleAnchorClick(id)}
+                                    onClick={() => {
+                                        if (window.confirm(`Bạn có chắc muốn xóa Tag ${tagId} không?`)) {
+                                            set(ref(rtdb, `uwb/rooms/${currentRoom}/tags/${tagId}`), null);
+                                        }
+                                    }}
+                                    onTap={() => {
+                                        if (window.confirm(`Bạn có chắc muốn xóa Tag ${tagId} không?`)) {
+                                            set(ref(rtdb, `uwb/rooms/${currentRoom}/tags/${tagId}`), null);
+                                        }
+                                    }}
                                 >
-                                    <Circle x={0} y={0} radius={20} fill="transparent" stroke={color} strokeWidth={isLocked ? 4 : 2} opacity={isLocked ? 0.8 : 0.25} dash={isLocked ? [4, 4] : undefined} listening={false} />
-                                    <Circle x={0} y={0} radius={11} fill={color} shadowBlur={12} shadowColor={color} shadowOpacity={0.6} />
+                                    <Circle x={0} y={0} radius={28} fill="transparent" stroke="#ff5500" strokeWidth={2.5} opacity={0.3} listening={true} />
+                                    <Circle x={0} y={0} radius={14} fill="#ff5500" shadowBlur={18} shadowColor="#ff5500" shadowOpacity={0.7} />
                                     {showLabels && (
                                         <>
-                                            <Text x={18} y={-12} text={id} fontSize={14} fill={color} fontStyle="bold" listening={false} />
-                                            <Text x={18} y={6} text={`(${pos.x.toFixed(1)}, ${pos.y.toFixed(1)})`} fontSize={10.5} fill="#64748b" listening={false} />
-                                            {isLocked && <Text x={18} y={20} text="Locked (10s)" fontSize={10} fill="#f59e0b" fontStyle="bold" listening={false} />}
+                                            <Text x={20} y={-12} text={tagId} fontSize={14} fill="#ff5500" fontStyle="bold" listening={false} />
+                                            <Text x={20} y={6} text={`(${tagPos.x?.toFixed(2)}, ${tagPos.y?.toFixed(2)})`} fontSize={10.5} fill="#64748b" listening={false} />
                                         </>
                                     )}
                                 </Group>
-                            );
-                        })}
+                            ))}
+                        </Layer>
+                    </Stage>
 
-                        {/* Hiển thị đa mảng Tags kèm tính năng Bấm Xóa */}
-                        {Object.entries(tags).map(([tagId, tagPos]) => (
-                            <Group
-                                key={tagId}
-                                x={toScreen(tagPos.x, tagPos.y).x}
-                                y={toScreen(tagPos.x, tagPos.y).y}
-                                draggable
-                                onDragStart={() => { isDraggingTagRef.current = true; }}
-                                onDragEnd={(e) => {
-                                    isDraggingTagRef.current = false;
-                                    const phys = toPhysical(e.target.x(), e.target.y());
-                                    const newX = phys.x;
-                                    const newY = phys.y;
-
-                                    // Lưu vị trí sau khi kéo lên Firebase
-                                    set(ref(rtdb, `uwb/rooms/${currentRoom}/tags/${tagId}`), { x: newX, y: newY });
-
-                                    e.target.position(toScreen(newX, newY));
-
-                                    if (socketRef.current) {
-                                        socketRef.current.emit("sim_tag_update", { roomId: currentRoom, id: tagId, x: newX, y: newY });
-                                    }
-                                }}
-                                onClick={() => {
-                                    if (window.confirm(`Bạn có chắc muốn xóa Tag ${tagId} không?`)) {
-                                        set(ref(rtdb, `uwb/rooms/${currentRoom}/tags/${tagId}`), null);
-                                    }
-                                }}
-                                onTap={() => {
-                                    if (window.confirm(`Bạn có chắc muốn xóa Tag ${tagId} không?`)) {
-                                        set(ref(rtdb, `uwb/rooms/${currentRoom}/tags/${tagId}`), null);
-                                    }
-                                }}
-                            >
-                                <Circle x={0} y={0} radius={28} fill="transparent" stroke="#ff5500" strokeWidth={2.5} opacity={0.3} listening={true} />
-                                <Circle x={0} y={0} radius={14} fill="#ff5500" shadowBlur={18} shadowColor="#ff5500" shadowOpacity={0.7} />
-                                {showLabels && (
-                                    <>
-                                        <Text x={20} y={-12} text={tagId} fontSize={14} fill="#ff5500" fontStyle="bold" listening={false} />
-                                        <Text x={20} y={6} text={`(${tagPos.x.toFixed(2)}, ${tagPos.y.toFixed(2)})`} fontSize={10.5} fill="#64748b" listening={false} />
-                                    </>
-                                )}
-                            </Group>
-                        ))}
-                    </Layer>
-                </Stage>
-
-                {editAnchor && (
-                    <div className={styles.popup}>
-                        <div className={styles.popupHeader}>
-                            <span className={styles.popupDot} style={{ background: anchors[editAnchor]?.color || "#000" }} />
-                            Edit Anchor <strong>{editAnchor}</strong>
-                        </div>
-                        <div className={styles.popupBody}>
-                            <div>
-                                <div className={styles.popupLabel}>Name</div>
-                                <input className={styles.popupInput} type="text" value={inputName} onChange={e => setInputName(e.target.value)} autoFocus />
+                    {editAnchor && (
+                        <div className={styles.popup}>
+                            <div className={styles.popupHeader}>
+                                <span className={styles.popupDot} style={{ background: anchors[editAnchor]?.color || "#000" }} />
+                                Edit Anchor <strong>{editAnchor}</strong>
                             </div>
-                            <div>
-                                <div className={styles.popupLabel}>X (meters)</div>
-                                <input className={styles.popupInput} type="number" step="0.01" value={inputX} onChange={e => setInputX(e.target.value)} />
+                            <div className={styles.popupBody}>
+                                <div>
+                                    <div className={styles.popupLabel}>Name</div>
+                                    <input className={styles.popupInput} type="text" value={inputName} onChange={e => setInputName(e.target.value)} autoFocus />
+                                </div>
+                                <div>
+                                    <div className={styles.popupLabel}>X (meters)</div>
+                                    <input className={styles.popupInput} type="number" step="0.01" value={inputX} onChange={e => setInputX(e.target.value)} />
+                                </div>
+                                <div>
+                                    <div className={styles.popupLabel}>Y (meters)</div>
+                                    <input className={styles.popupInput} type="number" step="0.01" value={inputY} onChange={e => setInputY(e.target.value)}
+                                           onKeyDown={e => { if (e.key === "Enter") applyAnchorEdit(); if (e.key === "Escape") setEditAnchor(null); }} />
+                                </div>
                             </div>
-                            <div>
-                                <div className={styles.popupLabel}>Y (meters)</div>
-                                <input className={styles.popupInput} type="number" step="0.01" value={inputY} onChange={e => setInputY(e.target.value)}
-                                       onKeyDown={e => { if (e.key === "Enter") applyAnchorEdit(); if (e.key === "Escape") setEditAnchor(null); }} />
+                            <div className={styles.popupFooter}>
+                                <button className={`${styles.popupCancel} ${styles.danger}`} onClick={() => deleteAnchor(editAnchor)}>Delete</button>
+                                <button className={styles.popupCancel} onClick={() => setEditAnchor(null)}>Cancel</button>
+                                <button className={styles.popupApply} onClick={applyAnchorEdit}>Apply</button>
                             </div>
                         </div>
-                        <div className={styles.popupFooter}>
-                            <button className={`${styles.popupCancel} ${styles.danger}`} onClick={() => deleteAnchor(editAnchor)}>Delete</button>
-                            <button className={styles.popupCancel} onClick={() => setEditAnchor(null)}>Cancel</button>
-                            <button className={styles.popupApply} onClick={applyAnchorEdit}>Apply</button>
-                        </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            ) : (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, paddingTop: '120px', boxSizing: 'border-box', background: '#f8fafc' }}>
+                    <AnalyticsMap />
+                </div>
+            )}
         </div>
     );
 }

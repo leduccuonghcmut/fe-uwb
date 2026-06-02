@@ -28,6 +28,11 @@ export default function ThreeScene() {
         setVisualScaleFactor(scaleOptions[(idx + 1) % scaleOptions.length]);
     };
 
+    // === STATE CẢNH BÁO TAG VÀO VÙNG CẤM ===
+    const [violatingTags, setViolatingTags] = useState([]);
+    const lastViolatorStr = useRef("");
+    const zonesRef = useRef([]);
+
     useEffect(() => {
         const mount = mountRef.current;
         if (!mount) return;
@@ -156,7 +161,7 @@ export default function ThreeScene() {
         // Material cho Tia Laser
         const lineMat = new THREE.LineBasicMaterial({ color: 0xff8c42, transparent: true, opacity: 0.75 });
 
-        // 4. Lắng nghe Dữ Liệu từ Firebase (Đồng bộ đa thiết bị giống 2D)
+        // 4. Lắng nghe Dữ Liệu từ Firebase
         let currentRoom = null;
         let anchorsUnsub = null;
         let tagsUnsub = null;
@@ -173,8 +178,9 @@ export default function ThreeScene() {
                     const data = aSnap.val() || {};
                     Object.keys(data).forEach(id => {
                         if (!anchors3D[id]) anchors3D[id] = createAnchor(id, data[id].color || "#0066ff");
-                        // CHÚ Ý: Đổi hệ tọa độ! 2D.y -> 3D.z. Chiều cao Y cố định là 1.0 cho Anchor
-                        anchors3D[id].mesh.position.set(data[id].x || 0, 1.0, data[id].y || 0);
+                        const ax = data[id].x !== undefined ? data[id].x : 0;
+                        const az = data[id].y !== undefined ? data[id].y : 0;
+                        anchors3D[id].mesh.position.set(ax, 1.0, az);
                     });
                     Object.keys(anchors3D).forEach(id => {
                         if (!data[id]) {
@@ -190,8 +196,9 @@ export default function ThreeScene() {
                     const data = tSnap.val() || {};
                     Object.keys(data).forEach(id => {
                         if (!tags3D[id]) tags3D[id] = createTag(id, "#ff3b30");
-                        // CHÚ Ý: Đổi hệ tọa độ! 2D.y -> 3D.z. Chiều cao Y cố định là 0.2 cho Tag (bám sát mặt đất)
-                        tags3D[id].mesh.position.set(data[id].x || 0, 0.2, data[id].y || 0);
+                        const tx = data[id].x !== undefined ? data[id].x : 0;
+                        const tz = data[id].y !== undefined ? data[id].y : 0;
+                        tags3D[id].mesh.position.set(tx, 0.2, tz);
                     });
                     Object.keys(tags3D).forEach(id => {
                         if (!data[id]) {
@@ -203,17 +210,27 @@ export default function ThreeScene() {
             }
         });
 
-        // 5. Cập nhật vị trí Tags theo Real-time Socket (Đè lên Firebase data nếu có)
+        // 5. Cập nhật vị trí Tags theo Real-time Socket
         if (socket) {
             socket.on("full-state-update", (state) => {
                 if (state.tags) {
                     Object.keys(state.tags).forEach(id => {
-                        if (tags3D[id]) {
-                            const t = state.tags[id];
-                            // Cập nhật mượt mà, vẫn quy tắc: 2D.y -> 3D.z
-                            tags3D[id].mesh.position.set(t.x || 0, 0.2, t.y || 0);
-                        }
+                        if (!tags3D[id]) tags3D[id] = createTag(id, "#ff3b30");
+                        const t = state.tags[id];
+                        const posX = t.x !== undefined ? t.x : 0;
+                        const posZ = t.y !== undefined ? t.y : (t.z || 0);
+                        tags3D[id].mesh.position.set(posX, 0.2, posZ);
                     });
+                }
+
+                if (state.tag) {
+                    const tagId = state.tag.id ? `T${state.tag.id}` : "T1";
+                    if (!tags3D[tagId]) tags3D[tagId] = createTag(tagId, "#ff3b30");
+
+                    const posX = state.tag.x !== undefined ? state.tag.x : 0;
+                    const posZ = state.tag.y !== undefined ? state.tag.y : (state.tag.z || 0);
+
+                    tags3D[tagId].mesh.position.set(posX, 0.2, posZ);
                 }
             });
         }
@@ -225,7 +242,13 @@ export default function ThreeScene() {
         const zonesUnsubscribe = onValue(ref(rtdb, "uwb/forbidden/zones"), (snap) => {
             forbiddenGroup.clear();
             const data = snap.val();
-            if (!data) return;
+            if (!data) {
+                zonesRef.current = [];
+                return;
+            }
+
+            // Lưu dữ liệu vào Ref để tính toán va chạm trong vòng lặp animate
+            zonesRef.current = Object.keys(data).map(key => data[key]);
 
             Object.keys(data).forEach(key => {
                 const cfg = data[key];
@@ -238,7 +261,6 @@ export default function ThreeScene() {
                 const finalScale = auto * visualScaleFactor;
 
                 const mesh = new THREE.Mesh(new THREE.BoxGeometry(realW * finalScale, realH * finalScale, realD * finalScale), forbiddenMaterial);
-                // Hệ tọa độ Vùng Cấm giữ nguyên cấu trúc chuẩn 3D X, Y, Z
                 mesh.position.set(cfg.x || 0, cfg.y || 0, cfg.z || 0);
 
                 const edges = new THREE.EdgesGeometry(mesh.geometry);
@@ -275,7 +297,47 @@ export default function ThreeScene() {
 
             const elapsed = clock.getElapsedTime();
 
-            // Vẽ Laser động cho TẤT CẢ tags nối tới TẤT CẢ anchors
+            // --- THUẬT TOÁN KIỂM TRA VA CHẠM VỚI VÙNG CẤM ---
+            const currentViolators = new Set();
+
+            Object.entries(tags3D).forEach(([tId, tagObj]) => {
+                const tx = tagObj.mesh.position.x;
+                const tz = tagObj.mesh.position.z;
+                let inZone = false;
+
+                zonesRef.current.forEach(zone => {
+                    const zx = zone.x || 0;
+                    const zz = zone.z || 0;
+                    const zw = zone.w || 4;
+                    const zd = zone.d || 4;
+
+                    // Kiểm tra xem (tx, tz) có nằm trong hình chữ nhật trung tâm (zx, zz) không
+                    if (Math.abs(tx - zx) <= zw / 2 && Math.abs(tz - zz) <= zd / 2) {
+                        inZone = true;
+                    }
+                });
+
+                if (inZone) {
+                    currentViolators.add(tId);
+                    // Đổi Tag thành màu đỏ đậm chớp nháy mạnh
+                    tagObj.halo.material.color.setHex(0xff0000);
+                    tagObj.mesh.material.emissive.setHex(0xff0000);
+                } else {
+                    // Trả về màu cam đỏ mặc định
+                    tagObj.halo.material.color.setHex(0xff3b30);
+                    tagObj.mesh.material.emissive.setHex(0xff3b30);
+                }
+            });
+
+            // Cập nhật State cảnh báo lên giao diện (Chỉ cập nhật khi có sự thay đổi để tránh lag)
+            const violatorArr = Array.from(currentViolators).sort();
+            const violatorStr = violatorArr.join(',');
+            if (lastViolatorStr.current !== violatorStr) {
+                lastViolatorStr.current = violatorStr;
+                setViolatingTags(violatorArr);
+            }
+            // ------------------------------------------------
+
             Object.keys(tags3D).forEach(tId => {
                 Object.keys(anchors3D).forEach(aId => {
                     const lineId = `${tId}-${aId}`;
@@ -293,7 +355,6 @@ export default function ThreeScene() {
                 });
             });
 
-            // Dọn dẹp laser nếu bị xóa
             Object.keys(lines3D).forEach(lineId => {
                 const [tId, aId] = lineId.split('-');
                 if (!tags3D[tId] || !anchors3D[aId]) {
@@ -302,7 +363,6 @@ export default function ThreeScene() {
                 }
             });
 
-            // Cập nhật Animation & Label Position
             Object.values(tags3D).forEach(tag => {
                 tag.mesh.material.emissiveIntensity = 0.75 + Math.sin(elapsed * 3.5) * 0.3;
                 tag.halo.material.opacity = 0.75 + Math.sin(elapsed * 3) * 0.15;
@@ -336,6 +396,21 @@ export default function ThreeScene() {
 
     return (
         <div style={{ width: "100%", height: "100%", position: "relative" }}>
+
+            {/* HIỂN THỊ CẢNH BÁO NỔI (3D) */}
+            {violatingTags.length > 0 && (
+                <div style={{
+                    position: 'absolute', top: '70px', left: '50%', transform: 'translateX(-50%)',
+                    background: '#fee2e2', color: '#991b1b', padding: '10px 24px', borderRadius: '8px',
+                    border: '2px solid #ef4444', fontWeight: 'bold', zIndex: 1000,
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)', display: 'flex', alignItems: 'center', gap: '8px',
+                    fontSize: '15px'
+                }}>
+                    <i className="ri-error-warning-fill" style={{ fontSize: '22px' }}></i>
+                    WARNING: {violatingTags.join(', ')} in restricted area!
+                </div>
+            )}
+
             <div ref={mountRef} style={{ width: "100%", height: "100%" }} />
 
             {/* NÚT GRID */}

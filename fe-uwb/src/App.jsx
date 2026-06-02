@@ -10,6 +10,10 @@ import LiveTracking from "./pages/LiveTracking/LiveTracking";
 import Sidebar from "./components/Sidebar/Sidebar";
 import SystemConfig from "./pages/SystemConfig/SystemConfig";
 import LiveTracking2D from "./pages/LiveTracking/TwoDScene";
+import AdvanceFeature from "./pages/AdvancedFeature/AdvanceFeature";
+
+// Import trang Export mới tạo
+import Export from "./pages/Export/Export";
 
 function App() {
     return (
@@ -62,7 +66,71 @@ function App() {
                     }
                 />
 
-                {/* LIVE TRACKING 3D (giữ nguyên) */}
+                {/* ADVANCE FEATURE */}
+                <Route
+                    path="/advance"
+                    element={
+                        <ProtectedRoute>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    height: "100vh",
+                                    width: "100vw",
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <div style={{ flexShrink: 0 }}>
+                                    <Sidebar />
+                                </div>
+
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: "100vh",
+                                        overflowY: "auto",
+                                        background: "#f8fafc",
+                                    }}
+                                >
+                                    <AdvanceFeature />
+                                </div>
+                            </div>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* EXPORT DATA (MỚI THÊM) */}
+                <Route
+                    path="/export"
+                    element={
+                        <ProtectedRoute>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    height: "100vh",
+                                    width: "100vw",
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <div style={{ flexShrink: 0 }}>
+                                    <Sidebar />
+                                </div>
+
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: "100vh",
+                                        overflowY: "auto",
+                                        background: "#f8fafc", /* Nền đồng bộ với giao diện */
+                                    }}
+                                >
+                                    <Export />
+                                </div>
+                            </div>
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* LIVE TRACKING 3D */}
                 <Route
                     path="/live"
                     element={
@@ -94,7 +162,7 @@ function App() {
                     }
                 />
 
-                {/* LIVE TRACKING 2D - BẢN ĐỒ SỐ HÓA (MỚI) */}
+                {/* LIVE TRACKING 2D */}
                 <Route
                     path="/live-2d"
                     element={

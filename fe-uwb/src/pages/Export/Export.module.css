@@ -1,0 +1,277 @@
+/* src/pages/Export/Export.module.css */
+
+.container {
+    width: 100%;
+    height: 100%;
+    padding: 32px 40px;
+    background-color: #f4f7fb;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+/* --- Header Section --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+}
+
+.pageTitle {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.5px;
+}
+
+.pageSubtitle {
+    font-size: 15px;
+    color: #64748b;
+    margin: 0;
+}
+
+.tagSelector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #ffffff;
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.tagSelector i {
+    font-size: 20px;
+    color: #0004fc;
+}
+
+.select {
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    outline: none;
+    cursor: pointer;
+    background: transparent;
+}
+
+/* --- Main Content Grid --- */
+.mainGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 1100px) {
+    .mainGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.leftCol, .rightCol {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* --- Card Architecture --- */
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.cardHeader {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #ffffff;
+}
+
+.cardHeader h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cardHeader h2 i {
+    color: #0004fc;
+    font-size: 18px;
+}
+
+.cardBody {
+    padding: 24px;
+}
+
+/* --- Table --- */
+.tableWrapper {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.table th {
+    background-color: #f8fafc;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table td {
+    padding: 14px 20px;
+    font-size: 14px;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.timeCell {
+    color: #64748b !important;
+    font-family: monospace;
+}
+
+.coordCell {
+    font-weight: 600;
+}
+
+.tableFooter {
+    padding: 12px 20px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #64748b;
+    text-align: center;
+}
+
+/* --- Status Badges --- */
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badgeGreen { background-color: #d1fae5; color: #059669; }
+.badgeRed { background-color: #ffe4e6; color: #e11d48; }
+.badgeBlue { background-color: #e0f2fe; color: #0284c7; }
+
+.emptyState {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
+    font-size: 14px;
+    font-style: italic;
+    background: #fafbfc;
+}
+
+/* --- Export Custom UI --- */
+.description {
+    font-size: 14px;
+    color: #475569;
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+}
+
+.summaryBox {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.summaryItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #475569;
+}
+
+.summaryItem strong {
+    color: #0f172a;
+    font-size: 16px;
+}
+
+/* --- Sliders --- */
+.verticalGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.rangeInput {
+    width: 100%;
+    accent-color: #0004fc;
+    cursor: pointer;
+}
+
+.hint {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* --- Excel Button Style --- */
+.btnExcel {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background-color: #10b981; /* Màu xanh lá Excel */
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btnExcel:hover:not(:disabled) {
+    background-color: #059669;
+}
+
+.btnExcel:disabled {
+    background-color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btnExcel:active:not(:disabled) {
+    transform: scale(0.98);
+}

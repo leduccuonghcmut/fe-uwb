@@ -1,18 +1,18 @@
 import { useState } from "react";
 import styles from "./Sidebar.module.css";
 
-import { logoutUser } from "../../service/auth"; // 🔥 thêm
-import { useNavigate } from "react-router-dom"; // 🔥 thêm
+import { logoutUser } from "../../service/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const navigate = useNavigate(); // 🔥 thêm
+  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
   };
 
-  const handleLogout = async () => {     // 🔥 thêm
+  const handleLogout = async () => {
     await logoutUser();
     navigate("/");
   };
@@ -36,6 +36,7 @@ export default function Sidebar() {
             <i className="ri-pie-chart-2-fill"></i>
             <span>Dashboard</span>
           </a>
+
           <a
               className={styles.menuItem}
               onClick={() => navigate("/live")}
@@ -52,11 +53,19 @@ export default function Sidebar() {
             <span>System Config</span>
           </a>
 
-          <a className={styles.menuItem}>
+          <a
+              className={styles.menuItem}
+              onClick={() => navigate("/advance")}
+          >
             <i className="ri-magic-line"></i>
             <span>Advance Feature</span>
           </a>
-          <a className={styles.menuItem}>
+
+          {/* ĐÃ THÊM SỰ KIỆN CLICK ĐỂ CHUYỂN TRANG EXPORT */}
+          <a
+              className={styles.menuItem}
+              onClick={() => navigate("/export")}
+          >
             <i className="ri-download-2-line"></i>
             <span>Export</span>
           </a>

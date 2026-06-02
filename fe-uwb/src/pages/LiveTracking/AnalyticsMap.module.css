@@ -1,0 +1,296 @@
+/* src/pages/LiveTracking/AnalyticsMap.module.css */
+
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8fafc;
+    font-family: 'Inter', system-ui, sans-serif;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* --- MAIN LAYOUT --- */
+.content {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+}
+
+/* --- LEFT SIDE: MAP --- */
+/* Map được tăng flex lên 3.5 để chiếm phần lớn không gian màn hình */
+.mapArea {
+    flex: 3.5;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    background-image:
+            linear-gradient(to right, #f8fafc 1px, transparent 1px),
+            linear-gradient(to bottom, #f8fafc 1px, transparent 1px);
+    background-size: 25px 25px;
+}
+
+.mapArea:active {
+    cursor: grabbing;
+}
+
+.mapToolBar {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+}
+
+.mapHint {
+    background: rgba(255, 255, 255, 0.95);
+    color: #475569;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mapLegend {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+}
+
+.legendItem {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dotPurple { width: 14px; height: 4px; background: #8b5cf6; border-radius: 4px; }
+.lineGray { width: 14px; height: 2px; background: #94a3b8; border-radius: 2px; }
+.dotRed { width: 12px; height: 12px; background: rgba(244, 63, 94, 0.4); border: 2px solid #f43f5e; border-radius: 50%; }
+
+/* --- RIGHT SIDE: STATS & CONTROLS --- */
+/* Cột phải giữ flex 1 với min-width để không bị ép nhỏ quá */
+.statsArea {
+    flex: 1;
+    min-width: 350px;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    padding-bottom: 60px;
+}
+
+.statCard {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f8fafc;
+    padding-bottom: 10px;
+}
+
+.cardHeader i { font-size: 20px; }
+.cardHeader h3 { margin: 0; font-size: 15px; font-weight: 700; color: #1e293b; }
+
+.mainTitle {
+    margin: 0;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.3px;
+}
+
+.controlRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.select {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0004fc;
+    outline: none;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.btnClear {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background-color: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btnClear:hover {
+    background-color: #ffe4e6;
+    border-color: #fda4af;
+}
+
+.ruleControlsCol {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: #f8fafc;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #f1f5f9;
+}
+
+.controlGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.controlGroup label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+}
+
+.controlGroup strong {
+    color: #0f172a;
+}
+
+.controlGroup input[type="range"] {
+    width: 100%;
+    accent-color: #8b5cf6;
+    cursor: pointer;
+}
+
+/* --- CHARTS --- */
+.chartWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 200px;
+}
+
+.customLegend {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.legendRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.legendLabelWrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legendColorDot { width: 10px; height: 10px; border-radius: 50%; }
+.legendName { font-size: 13px; font-weight: 500; color: #475569; }
+.legendTime { font-size: 14px; font-weight: 700; color: #0f172a; }
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    padding: 30px 20px;
+}
+
+.emptyState i {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+/* Info Grid */
+.infoGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.infoBox {
+    padding: 14px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid transparent;
+}
+
+.boxBlue { background: #f0f9ff; border-color: #e0f2fe; }
+.boxRed { background: #fff1f2; border-color: #ffe4e6; }
+
+.infoLabel { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; }
+.infoValue { font-size: 22px; font-weight: 800; display: flex; align-items: baseline; gap: 4px; }
+.boxBlue .infoValue { color: #0284c7; }
+.boxRed .infoValue { color: #e11d48; }
+
+.ruleSuggestion {
+    padding: 14px;
+    border-radius: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.ruleSuggestion.warn { background: #fff1f2; border: 1px dashed #fda4af; color: #9f1239; }
+.ruleSuggestion.good { background: #f0fdf4; border: 1px dashed #86efac; color: #166534; }
