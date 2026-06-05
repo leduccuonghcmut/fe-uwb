@@ -4,28 +4,11 @@ This directory contains the Python gateway and filtering algorithms that process
 
 ---
 
-## Real-time Data Flow & Architecture
+## System Architecture
 
-```
-[UWB Tag] 
-   │  (Runs IM-IRLS Solver on-board to compute raw 2D coordinates)
-   ▼
-[BLE Advertisement Broadcast]
-   │
-   ▼ 
-[Bluetooth Adapter]
-   │
-   ▼ 
-[uwb_gateway.py]
-   │
-   ▼ 
-[gmc_kalman.py (IMM-GMC-Kalman Filter)]
-   │
-   ├─► [Smooths trajectory, rejects NLOS outliers & locks jitter]
-   │
-   ▼ 
-[Backend Node.js Server (be-uwb)]
-   │
-   ▼ 
-[Web Frontend Dashboard (fe-uwb)] ──► (Renders position on 2D/3D map)
-```
+The gateway operates in two independent directional loops:
+1. **Uplink (Telemetry Flow)**: Scans for BLE advertisement packets from hardware nodes, filters tag coordinates using the IMM-GMC-Kalman filter, and emits updates to the Web Server via Socket.io.
+2. **Downlink (Configuration Flow)**: Listens for configuration events from the Web Server, enqueues them, and broadcasts them down to physical UWB nodes via BLE.
+
+---
+

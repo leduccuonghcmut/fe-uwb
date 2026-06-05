@@ -34,7 +34,6 @@ last_anchor_send_time = 0
 tag_filters = {}
 last_tag_timestamp = {} 
 
-# Windows BLE Advertiser states
 current_publisher = None
 current_adv_task = None
 
@@ -51,31 +50,53 @@ def stop_publisher():
             pass
         current_publisher = None
 
-async def broadcast_windows_payload(company_id, payload_bytes, duration=5.0):
-    """Publishes a manufacturer-specific BLE advertisement payload."""
-    global current_publisher
-    stop_publisher()
+# async def broadcast_windows_payload(company_id, payload_bytes, duration=5.0):
+#     """Publishes a manufacturer-specific BLE advertisement payload."""
+#     global current_publisher
+#     stop_publisher()
 
+#     writer = DataWriter()
+#     writer.write_bytes(payload_bytes)
+
+#     md = BluetoothLEManufacturerData()
+#     md.company_id = company_id
+#     md.data = writer.detach_buffer()
+
+#     ad = BluetoothLEAdvertisement()
+#     ad.manufacturer_data.append(md)
+    
+#     current_publisher = BluetoothLEAdvertisementPublisher(ad)
+    
+#     try:
+#         current_publisher.start()
+#         await asyncio.sleep(duration)
+#     except asyncio.CancelledError:
+#         pass
+#     finally:
+#         stop_publisher()
+#         print("[ADV] BLE configuration broadcast stopped.")
+
+async def broadcast_windows_payload(company_id, payload_bytes, duration=5.0):
     writer = DataWriter()
     writer.write_bytes(payload_bytes)
-
     md = BluetoothLEManufacturerData()
     md.company_id = company_id
     md.data = writer.detach_buffer()
-
     ad = BluetoothLEAdvertisement()
     ad.manufacturer_data.append(md)
-    
-    current_publisher = BluetoothLEAdvertisementPublisher(ad)
-    
+    publisher = BluetoothLEAdvertisementPublisher(ad)
     try:
-        current_publisher.start()
+        publisher.start()
         await asyncio.sleep(duration)
     except asyncio.CancelledError:
         pass
     finally:
-        stop_publisher()
+        try:
+            publisher.stop()
+        except:
+            pass
         print("[ADV] BLE configuration broadcast stopped.")
+
 
 async def advertiser_worker():
     """Worker task processing device command queue."""
@@ -106,7 +127,7 @@ async def advertiser_worker():
             else:
                 print(f"[ADV] Sending Role Config: MAC={mac_hex} | Role={role} | ID={node_id}")
             
-            current_adv_task = asyncio.create_task(broadcast_windows_payload(0x0059, payload, duration=6.0))
+            current_adv_task = asyncio.create_task(broadcast_windows_payload(0x0059, payload, duration=11.0))
             
         # B. Anchor coordinates configuration
         elif cmd_type == "coord":
@@ -122,7 +143,7 @@ async def advertiser_worker():
             payload = struct.pack('<BBff', 0x47, int(node_id), float(x), float(y))
             print(f"[ADV] Sending Anchor Coord Config: A{node_id} -> (X={x}, Y={y})")
             
-            current_adv_task = asyncio.create_task(broadcast_windows_payload(0x0059, payload, duration=5.0))
+            current_adv_task = asyncio.create_task(broadcast_windows_payload(0x0059, payload, duration=11.0))
         
         config_queue.task_done()
 

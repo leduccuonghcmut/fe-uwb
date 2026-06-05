@@ -1,7 +1,6 @@
 # uwb_logger.py
 # ======================================================================
 # UWB Evaluation & Statistics Logger
-# Reads real-time positions from vitri.txt, logs to CSV, and calculates
 # ======================================================================
 
 import time
