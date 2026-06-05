@@ -4,39 +4,47 @@
 
 Frontend for an **Ultra-Wideband (UWB) Real-time Tracking System** built with **React + Vite**.
 
-Features:
-- Firebase Authentication (Email/Password + Google OAuth)
-- Real-time position tracking (3D/2D visualization)
-- Geofence management (forbidden zones)
-- Device configuration & status monitoring
-- Live dashboard with analytics
-- WebSocket communication via Socket.IO
+### Features
 
-## Structure
+* Firebase Authentication (Email/Password + Google OAuth)
+* Real-time position tracking (2D/3D visualization)
+* Geofence management (forbidden zones)
+* Device configuration and status monitoring
+* Live dashboard with analytics
+* WebSocket communication via Socket.IO
 
+## Project Structure
+
+```text
 src/
-├── main.jsx                 # React entry point
-├── App.jsx                  # Routes & layout
-├── index.css               # Global styles
-├── components/             # Reusable UI components
+├── main.jsx
+├── App.jsx
+├── index.css
+│
+├── components/
 │   ├── Header/
 │   ├── Sidebar/
 │   ├── OverviewCard/
 │   └── ProtectedRoute.jsx
-├── pages/                  # Page components (routes)
+│
+├── pages/
 │   ├── Home/
 │   ├── Login/
 │   ├── Register/
 │   ├── Dashboard/
-│   ├── SystemConfig/       # Device & zone management
-│   ├── LiveTracking/       # 3D/2D tracking visualization
+│   ├── SystemConfig/
+│   ├── LiveTracking/
 │   ├── Export/
 │   └── AdvancedFeature/
-├── service/                # API & Firebase connections
-│   ├── firebase.js         # Firebase initialization
-│   ├── auth.js             # Authentication functions
-│   ├── socket.js           # Socket.IO client
-│   ├── deviceService.js    # Device CRUD operations
-│   └── init-firebase.js    # Database structure setup
+│
+├── service/
+│   ├── firebase.js
+│   ├── auth.js
+│   ├── socket.js
+│   ├── deviceService.js
+│   └── init-firebase.js
+│
 └── context/
-    └── AuthContext.jsx     # Global authentication state
+    └── AuthContext.jsx
+```
+
